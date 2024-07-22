@@ -1,19 +1,18 @@
-use bevy::asset::{AssetLoader, AsyncReadExt, LoadContext};
-use bevy::asset::io::Reader;
+use bevy::asset::{AssetLoader, AsyncReadExt, io::Reader, LoadContext};
 use bevy::prelude::*;
-use bevy::utils::ConditionalSendFuture;
-use serde::{Deserialize, Serialize};
 
-use crate::levels::LoadLevelEvent;
+use crate::levels::{level_data_ready, LoadLevelEvent};
+use crate::levels::data::LevelData;
 
-struct LevelLoaderPlugin;
+pub struct LevelLoaderPlugin;
 
 impl Plugin for LevelLoaderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SetLoadingAssetEvent>()
+        app.add_event::<LevelDataLoadedEvent>()
             .init_resource::<LevelDataHandleRes>()
             .init_asset_loader::<LevelJSONAssetLoader>()
-            .init_asset::<LevelData>();
+            .init_asset::<LevelData>()
+            .add_systems(Update, (load_level, set_loaded_level, level_data_ready));
     }
 }
 
@@ -23,14 +22,14 @@ struct LevelJSONAssetLoader;
 impl AssetLoader for LevelJSONAssetLoader {
     type Asset = LevelData;
     type Settings = ();
-    type Error = ();
+    type Error = std::io::Error;
 
     async fn load<'a>(
         &'a self,
-        reader: &'a mut Reader,
+        reader: &'a mut Reader<'_>,
         _settings: &'a Self::Settings,
-        _load_context: &'a mut LoadContext,
-    ) -> impl ConditionalSendFuture<Output = Result<Self::Asset, Self::Error>> {
+        _load_context: &'a mut LoadContext<'_>,
+    ) -> Result<LevelData, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
 
@@ -43,57 +42,31 @@ impl AssetLoader for LevelJSONAssetLoader {
     }
 }
 
-struct LocationJSON {
-    x: u32,
-    y: u32,
-}
-
-enum TileTypeJSON {
-    Dirt,
-}
-
-struct TileJSON {
-    tile_type: TileTypeJSON,
-}
-
-#[derive(Serialize, Deserialize, Asset)]
-struct LevelData {
-    spawn_location: LocationJSON,
-    tiles: Vec<TileJSON>,
-}
-
 #[derive(Resource, Default)]
 struct LevelDataHandleRes(Option<Handle<LevelData>>);
 
 fn load_level(
-    mut set_level: EventReader<LoadLevelEvent>,
-    asset_server: AssetServer,
+    mut set_level_event: EventReader<LoadLevelEvent>,
+    asset_server: Res<AssetServer>,
     mut level_data_json_handle: ResMut<LevelDataHandleRes>,
 ) {
-    if let Some(level_id) = set_level.read().next() {
-        let level_handle = asset_server.load(format!("level{}.json", level_id.0));
+    if let Some(level_id) = set_level_event.read().next() {
+        let level_handle = asset_server.load(format!("level/level{}.lvl", level_id.0));
         level_data_json_handle.0 = Some(level_handle);
     }
 }
 
 #[derive(Event)]
-struct SetLoadingAssetEvent(AssetId<LevelData>);
+pub struct LevelDataLoadedEvent(pub AssetId<LevelData>);
 
 fn set_loaded_level(
     mut asset_event_reader: EventReader<AssetEvent<LevelData>>,
-    mut set_loading_asset_event: EventWriter<SetLoadingAssetEvent>,
+    mut level_loaded_event: EventWriter<LevelDataLoadedEvent>,
+    // asset_server: Res<AssetServer>,
 ) {
     for asset_event in asset_event_reader.read() {
-        match asset_event {
-            AssetEvent::Added { id } => {
-                set_loading_asset_event.send(SetLoadingAssetEvent(*id));
-            }
-            AssetEvent::Modified { id } => {
-                set_loading_asset_event.send(SetLoadingAssetEvent(*id));
-            }
-            AssetEvent::Removed { .. } => {}
-            AssetEvent::Unused { .. } => {}
-            AssetEvent::LoadedWithDependencies { .. } => {}
+        if let AssetEvent::LoadedWithDependencies { id } = asset_event {
+            level_loaded_event.send(LevelDataLoadedEvent(*id));
         }
     }
 }

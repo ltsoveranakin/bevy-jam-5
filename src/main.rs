@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::TilemapPlugin;
-use bevy_editor_pls::EditorPlugin;
-use bevy_rapier2d::prelude::RapierPhysicsPlugin;
+use bevy_rapier2d::prelude::*;
 
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
@@ -17,9 +16,15 @@ fn main() {
                 ..default()
             }),
             TilemapPlugin,
-            EditorPlugin::default(),
-            RapierPhysicsPlugin::default(),
+            // EditorPlugin::default(),
+            RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.),
+            RapierDebugRenderPlugin::default(),
         ))
         .add_plugins((PlayerPlugin, LevelPlugin))
+        .add_systems(Startup, init_camera)
         .run();
+}
+
+fn init_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
 }

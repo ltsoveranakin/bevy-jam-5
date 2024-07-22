@@ -1,0 +1,32 @@
+{
+  "spawn_location": {
+    "x": 0,
+    "y": 3
+  },
+  "tiles": [
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 0,
+        "y": 0
+      },
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 1,
+        "y": 0
+      },
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 2,
+        "y": 0
+      },
+      "over": "Grass"
+    }
+  ]
+}

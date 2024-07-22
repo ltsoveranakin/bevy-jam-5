@@ -6,9 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.14.0"
+bevy = { version = "0.14.0", features = ["file_watcher"] }
 bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap" }
-bevy_editor_pls = { git = "https://github.com/zhaop/bevy_editor_pls.git", rev = "340a0e2cb1fa96b512e91ce35cd072059b066346" }
 bevy_rapier2d = "0.27.0"
 serde_json = "1.0.120"
 serde = { version = "1.0.204", features = ["derive"] }
