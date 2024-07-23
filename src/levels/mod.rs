@@ -45,7 +45,7 @@ fn level_data_ready(
             y: TILE_MAP_SIZE,
         };
 
-        let tile_set_handle: Handle<Image> = asset_server.load("image/tile_set.png");
+        let tile_set_handle: Handle<Image> = asset_server.load("image/tile/tile_set.png");
         let mut tile_storage = TileStorage::empty(tile_map_size);
         let tile_map_entity = commands.spawn_empty().id();
 

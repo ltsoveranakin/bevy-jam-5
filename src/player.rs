@@ -12,6 +12,20 @@ impl Plugin for PlayerPlugin {
 #[derive(Component)]
 pub struct Player;
 
-fn spawn_player(mut commands: Commands) {
-    commands.spawn((Player, Collider::ball(5.), RigidBody::KinematicPositionBased, KinematicCharacterController::default()));
+fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands
+        .spawn((
+            Player,
+            InheritedVisibility::default(),
+            Collider::ball(5.),
+            RigidBody::KinematicPositionBased,
+            KinematicCharacterController::default(),
+            TransformBundle::default(),
+        ))
+        .with_children(|parent| {
+            parent.spawn(SpriteBundle {
+                texture: asset_server.load("image/character/snowman.png"),
+                ..default()
+            });
+        });
 }
