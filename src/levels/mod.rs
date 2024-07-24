@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::Collider;
 
+use crate::debug::DebugVisibility;
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::player::Player;
@@ -66,12 +67,32 @@ fn level_data_ready(
                 })
                 .id();
 
-            commands.spawn((
-                TransformBundle::from_transform(Transform::from_translation(
-                    tile_pos_to_world_pos(tile_pos.into(), 0.),
-                )),
-                Collider::cuboid(TILE_SIZE / 2., TILE_SIZE / 2.),
-            ));
+            commands
+                .spawn((
+                    TransformBundle::from_transform(Transform::from_translation(
+                        tile_pos_to_world_pos(tile_pos.into(), 0.),
+                    )),
+                    Collider::cuboid(TILE_SIZE / 2., TILE_SIZE / 2.),
+                    InheritedVisibility::default(),
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text2dBundle {
+                            text: Text::from_section(
+                                format!("{}, {}", tile_pos.x, tile_pos.y),
+                                default(),
+                            ),
+                            transform: Transform {
+                                translation: Vec3::new(0., 0., 1.),
+                                scale: Vec3::splat(0.2),
+                                ..default()
+                            },
+                            visibility: Visibility::Hidden,
+                            ..default()
+                        },
+                        DebugVisibility,
+                    ));
+                });
 
             commands.entity(tile_map_entity).add_child(tile_entity);
             tile_storage.set(&tile_pos, tile_entity);

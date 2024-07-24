@@ -14,7 +14,7 @@ impl Plugin for CameraPlugin {
 fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle {
         transform: Transform {
-            translation: Vec3::new(220., 120., 0.),
+            translation: Vec3::new(152., 112., 0.),
             scale: Vec3::splat(0.4),
             ..default()
         },

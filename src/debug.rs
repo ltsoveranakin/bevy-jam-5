@@ -5,15 +5,59 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, toggle_debug_graphics);
+        app.configure_sets(Update, DebugRendererSet.run_if(in_state(DebugState::On)))
+            .init_state::<DebugState>()
+            .add_systems(Update, toggle_debug_state)
+            .add_systems(OnEnter(DebugState::On), enable_debug_state)
+            .add_systems(OnEnter(DebugState::Off), disable_debug_state);
     }
 }
 
-fn toggle_debug_graphics(
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+enum DebugState {
+    #[default]
+    Off,
+    On,
+}
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DebugRendererSet;
+
+#[derive(Component)]
+pub struct DebugVisibility;
+
+fn toggle_debug_state(
     keys: Res<ButtonInput<KeyCode>>,
-    mut debug_render_context: ResMut<DebugRenderContext>,
+    debug_state: Res<State<DebugState>>,
+    mut next_debug_state: ResMut<NextState<DebugState>>,
 ) {
     if keys.just_pressed(KeyCode::Backquote) {
-        debug_render_context.enabled = !debug_render_context.enabled;
+        if *debug_state == DebugState::Off {
+            next_debug_state.set(DebugState::On);
+        } else {
+            next_debug_state.set(DebugState::Off);
+        }
+    }
+}
+
+fn enable_debug_state(
+    mut debug_render_context: ResMut<DebugRenderContext>,
+    mut debug_visibility_query: Query<&mut Visibility, With<DebugVisibility>>,
+) {
+    debug_render_context.enabled = true;
+
+    for mut debug_vis in debug_visibility_query.iter_mut() {
+        *debug_vis = Visibility::Visible;
+    }
+}
+
+fn disable_debug_state(
+    mut debug_render_context: ResMut<DebugRenderContext>,
+    mut debug_visibility_query: Query<&mut Visibility, With<DebugVisibility>>,
+) {
+    debug_render_context.enabled = false;
+
+    for mut debug_vis in debug_visibility_query.iter_mut() {
+        *debug_vis = Visibility::Hidden;
     }
 }
