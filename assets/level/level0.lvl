@@ -1,11 +1,11 @@
 {
   "spawn_location": {
     "x": 0,
-    "y": 2
+    "y": 4
   },
   "tiles": [
     {
-      "tile_type": "Dirt",
+      "tile_type": "Stone",
       "off": {
         "x": 0,
         "y": 0
@@ -13,7 +13,7 @@
       "over": "Grass"
     },
     {
-      "tile_type": "Dirt",
+      "tile_type": "Stone",
       "off": {
         "x": 1,
         "y": 0
@@ -21,7 +21,7 @@
       "over": "Grass"
     },
     {
-      "tile_type": "Dirt",
+      "tile_type": "Stone",
       "off": {
         "x": 2,
         "y": 0
@@ -29,7 +29,7 @@
       "over": "Grass"
     },
     {
-      "tile_type": "Dirt",
+      "tile_type": "Stone",
       "off": {
         "x": 3,
         "y": 0
@@ -37,10 +37,18 @@
       "over": "Grass"
     },
     {
-      "tile_type": "Dirt",
+      "tile_type": "Stone",
       "off": {
         "x": 4,
         "y": 0
+      },
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Stone",
+      "off": {
+        "x": 0,
+        "y": 1
       },
       "over": "Grass"
     }

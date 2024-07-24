@@ -62,7 +62,6 @@ pub struct LevelDataLoadedEvent(pub AssetId<LevelData>);
 fn set_loaded_level(
     mut asset_event_reader: EventReader<AssetEvent<LevelData>>,
     mut level_loaded_event: EventWriter<LevelDataLoadedEvent>,
-    // asset_server: Res<AssetServer>,
 ) {
     for asset_event in asset_event_reader.read() {
         if let AssetEvent::LoadedWithDependencies { id } = asset_event {

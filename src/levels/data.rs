@@ -25,6 +25,16 @@ impl From<LocationData> for UVec2 {
 #[derive(Deserialize, Debug)]
 pub enum TileTypeData {
     Dirt,
+    Stone,
+}
+
+impl TileTypeData {
+    pub fn texture_index(&self) -> u32 {
+        match self {
+            Self::Dirt => 0,
+            Self::Stone => 1,
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]

@@ -61,7 +61,7 @@ fn level_data_ready(
                 .spawn(TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tile_map_entity),
-                    texture_index: TileTextureIndex(0),
+                    texture_index: TileTextureIndex(tile_data.tile_type.texture_index()),
                     ..default()
                 })
                 .id();
