@@ -27,6 +27,22 @@
         "y": 0
       },
       "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 3,
+        "y": 0
+      },
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 4,
+        "y": 0
+      },
+      "over": "Grass"
     }
   ]
 }

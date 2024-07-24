@@ -28,6 +28,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             GravityScale::default(),
             LockedAxes::ROTATION_LOCKED,
             Velocity::default(),
+            Ccd::enabled(),
         ))
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
