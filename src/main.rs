@@ -3,6 +3,7 @@ use bevy_ecs_tilemap::TilemapPlugin;
 use bevy_rapier2d::prelude::*;
 
 use crate::camera::CameraPlugin;
+use crate::debug::DebugPlugin;
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
 
@@ -21,10 +22,9 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
             TilemapPlugin,
-            // EditorPlugin::default(),
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.),
-            RapierDebugRenderPlugin::default(),
+            RapierDebugRenderPlugin::default().disabled(),
         ))
-        .add_plugins((PlayerPlugin, LevelPlugin, CameraPlugin))
+        .add_plugins((PlayerPlugin, LevelPlugin, CameraPlugin, DebugPlugin))
         .run();
 }
