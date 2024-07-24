@@ -1,11 +1,25 @@
 use bevy::asset::Asset;
+use bevy::math::UVec2;
 use bevy::prelude::TypePath;
+use bevy_ecs_tilemap::tiles::TilePos;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Copy, Clone)]
 pub struct LocationData {
     pub x: u32,
     pub y: u32,
+}
+
+impl From<LocationData> for TilePos {
+    fn from(value: LocationData) -> Self {
+        TilePos::new(value.x, value.y)
+    }
+}
+
+impl From<LocationData> for UVec2 {
+    fn from(value: LocationData) -> Self {
+        UVec2::new(value.x, value.y)
+    }
 }
 
 #[derive(Deserialize, Debug)]

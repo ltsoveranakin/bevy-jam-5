@@ -3,6 +3,7 @@ use bevy_ecs_tilemap::prelude::*;
 
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
+use crate::player::Player;
 
 mod data;
 mod level_loader;
@@ -30,11 +31,14 @@ fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
 fn level_data_ready(
     mut commands: Commands,
     tilemap_query: Query<Entity, With<TilemapType>>,
+    mut player_query: Query<&mut Transform, With<Player>>,
     mut level_data_loaded_event: EventReader<LevelDataLoadedEvent>,
     level_data_assets: Res<Assets<LevelData>>,
     asset_server: Res<AssetServer>,
 ) {
     if let Some(level_data) = level_data_loaded_event.read().next() {
+        let mut player_transform = player_query.single_mut();
+
         let level_data = level_data_assets.get(level_data.0).unwrap();
         if let Ok(tilemap_entity) = tilemap_query.get_single() {
             commands.entity(tilemap_entity).despawn_recursive();
@@ -77,5 +81,11 @@ fn level_data_ready(
             transform: Transform::from_xyz(0., 0., 0.),
             ..default()
         });
+
+        player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
     }
+}
+
+fn tile_pos_to_world_pos(tile_pos: UVec2, z_index: f32) -> Vec3 {
+    (tile_pos * TILE_SIZE as u32).as_vec2().extend(z_index)
 }
