@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-const PLAYER_SPEED: f32 = 10.;
+const PLAYER_SPEED: f32 = 0.5;
+const JUMP_POWER: f32 = 50.;
 
 pub struct PlayerPlugin;
 
@@ -21,9 +22,12 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             Player,
             InheritedVisibility::default(),
             Collider::ball(16.),
-            RigidBody::KinematicPositionBased,
+            RigidBody::Dynamic,
             KinematicCharacterController::default(),
             TransformBundle::default(),
+            GravityScale::default(),
+            LockedAxes::ROTATION_LOCKED,
+            Velocity::default(),
         ))
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
@@ -34,15 +38,15 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn move_player(
-    mut player_query: Query<&mut KinematicCharacterController>,
+    mut player_query: Query<(&mut KinematicCharacterController, &mut Velocity)>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
-    let mut character_controller = player_query.single_mut();
+    let (mut character_controller, mut velocity) = player_query.single_mut();
 
     let mut translation = Vec2::ZERO;
 
     if keys.pressed(KeyCode::KeyW) {
-        // translation.y += PLAYER_SPEED;
+        velocity.linvel.y = JUMP_POWER;
     }
 
     if keys.pressed(KeyCode::KeyA) {

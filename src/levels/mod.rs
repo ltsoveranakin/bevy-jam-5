@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use bevy_rapier2d::prelude::Collider;
 
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
@@ -64,6 +65,13 @@ fn level_data_ready(
                     ..default()
                 })
                 .id();
+
+            commands.spawn((
+                TransformBundle::from_transform(Transform::from_translation(
+                    tile_pos_to_world_pos(tile_pos.into(), 0.),
+                )),
+                Collider::cuboid(TILE_SIZE / 2., TILE_SIZE / 2.),
+            ));
 
             commands.entity(tile_map_entity).add_child(tile_entity);
             tile_storage.set(&tile_pos, tile_entity);
