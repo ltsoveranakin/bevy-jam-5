@@ -59,19 +59,23 @@ fn level_data_ready(
             let tile_pos = TilePos::new(tile_data.off.x, tile_data.off.y);
 
             let tile_entity = commands
-                .spawn(TileBundle {
-                    position: tile_pos,
-                    tilemap_id: TilemapId(tile_map_entity),
-                    texture_index: TileTextureIndex(tile_data.tile_type.texture_index()),
-                    ..default()
-                })
-                .id();
-
-            commands
                 .spawn((
+                    TileBundle {
+                        position: tile_pos,
+                        tilemap_id: TilemapId(tile_map_entity),
+                        texture_index: TileTextureIndex(tile_data.tile_type.texture_index()),
+                        ..default()
+                    },
                     TransformBundle::from_transform(Transform::from_translation(
                         tile_pos_to_world_pos(tile_pos.into(), 0.),
                     )),
+                    InheritedVisibility::default(),
+                ))
+                .id();
+
+            let collider_entity = commands
+                .spawn((
+                    TransformBundle::default(),
                     Collider::cuboid(TILE_SIZE / 2., TILE_SIZE / 2.),
                     InheritedVisibility::default(),
                 ))
@@ -92,7 +96,10 @@ fn level_data_ready(
                         },
                         DebugVisibility,
                     ));
-                });
+                })
+                .id();
+
+            commands.entity(tile_entity).add_child(collider_entity);
 
             commands.entity(tile_map_entity).add_child(tile_entity);
             tile_storage.set(&tile_pos, tile_entity);

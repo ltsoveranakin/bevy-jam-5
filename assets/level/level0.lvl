@@ -146,6 +146,14 @@
         "y": 3
       },
       "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 6,
+        "y": 2
+      },
+      "over": "Grass"
     }
   ]
 }
