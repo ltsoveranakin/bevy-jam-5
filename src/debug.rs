@@ -5,7 +5,7 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(Update, DebugRendererSet.run_if(in_state(DebugState::On)))
+        app.configure_sets(Update, DebugUpdateSet.run_if(in_state(DebugState::On)))
             .init_state::<DebugState>()
             .add_systems(Update, toggle_debug_state)
             .add_systems(OnEnter(DebugState::On), enable_debug_state)
@@ -21,7 +21,7 @@ enum DebugState {
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct DebugRendererSet;
+pub struct DebugUpdateSet;
 
 #[derive(Component)]
 pub struct DebugVisibility;

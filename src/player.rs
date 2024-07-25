@@ -58,7 +58,9 @@ fn move_player(
 
     let mut translation = 0.;
 
-    if controller_output.grounded && (keys.pressed(KeyCode::KeyW) || keys.pressed(KeyCode::Space)) {
+    if controller_output.grounded
+        && (keys.just_pressed(KeyCode::KeyW) || keys.just_pressed(KeyCode::Space))
+    {
         player_velocity.0.y = JUMP_POWER;
     }
 

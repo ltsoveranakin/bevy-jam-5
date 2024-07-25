@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::debug::DebugUpdateSet;
+
 const CAMERA_MOVE_SPEED: f32 = 50.;
 
 pub struct CameraPlugin;
@@ -7,7 +9,7 @@ pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera)
-            .add_systems(Update, move_camera);
+            .add_systems(Update, move_camera.in_set(DebugUpdateSet));
     }
 }
 
@@ -16,6 +18,10 @@ fn spawn_camera(mut commands: Commands) {
         transform: Transform {
             translation: Vec3::new(152., 112., 0.),
             scale: Vec3::splat(0.4),
+            ..default()
+        },
+        camera: Camera {
+            clear_color: ClearColorConfig::Custom(Color::srgb_u8(51, 141, 242)),
             ..default()
         },
         ..default()
