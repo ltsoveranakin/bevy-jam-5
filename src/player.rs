@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-const PLAYER_SPEED: f32 = 0.5;
-const JUMP_POWER: f32 = 2.;
-const PLAYER_GRAVITY: f32 = 10.;
-const PLAYER_MAX_GRAVITY: f32 = 100.;
+const PLAYER_SPEED: f32 = 60.;
+const JUMP_POWER: f32 = 300.;
+const MID_AIR_SPEED_DEGREDATION: f32 = 60.;
 
 pub struct PlayerPlugin;
 
@@ -13,33 +12,37 @@ impl Plugin for PlayerPlugin {
         app.add_systems(Startup, spawn_player).add_systems(
             Update,
             (
-                player_gravity,
-                move_player.after(player_gravity),
-                apply_player_velocity.after(move_player),
+                check_player_on_ground,
+                move_player.after(check_player_on_ground),
             ),
         );
     }
 }
 
 #[derive(Component)]
-pub struct Player;
-
-#[derive(Component)]
-struct PlayerVelocity(Vec2);
+pub struct Player {
+    on_ground: bool,
+    collider: Collider,
+}
 
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
-            Player,
-            PlayerVelocity(default()),
+            Player {
+                on_ground: false,
+                collider: Collider::capsule_y(3., 5.8),
+            },
             InheritedVisibility::default(),
             Collider::capsule_y(3., 6.),
-            RigidBody::KinematicVelocityBased,
+            RigidBody::Dynamic,
+            Velocity::default(),
             KinematicCharacterController::default(),
             KinematicCharacterControllerOutput::default(),
             TransformBundle::default(),
             LockedAxes::ROTATION_LOCKED,
             Ccd::enabled(),
+            Friction::new(0.2),
+            Restitution::default(),
         ))
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
@@ -51,53 +54,62 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn move_player(
-    mut player_query: Query<(&mut PlayerVelocity, &KinematicCharacterControllerOutput)>,
+    mut player_query: Query<(&Player, &mut Velocity)>,
     keys: Res<ButtonInput<KeyCode>>,
-) {
-    let (mut player_velocity, controller_output) = player_query.single_mut();
-
-    let mut translation = 0.;
-
-    if controller_output.grounded
-        && (keys.just_pressed(KeyCode::KeyW) || keys.just_pressed(KeyCode::Space))
-    {
-        player_velocity.0.y = JUMP_POWER;
-    }
-
-    if keys.pressed(KeyCode::KeyA) {
-        translation -= PLAYER_SPEED;
-    }
-
-    if keys.pressed(KeyCode::KeyD) {
-        translation += PLAYER_SPEED;
-    }
-
-    player_velocity.0.x = translation;
-}
-
-fn player_gravity(
-    mut player_query: Query<(&mut PlayerVelocity, &KinematicCharacterControllerOutput)>,
     time: Res<Time>,
 ) {
-    let (mut player_velocity, controller_output) = player_query.single_mut();
+    let (player, mut velocity) = player_query.single_mut();
 
-    if !controller_output.grounded {
-        player_velocity.0.y -= PLAYER_GRAVITY * time.delta_seconds();
+    let mut desired_x_velocity = 0.;
 
-        if player_velocity.0.y < -PLAYER_MAX_GRAVITY {
-            player_velocity.0.y = -PLAYER_MAX_GRAVITY;
+    if player.on_ground && (keys.just_pressed(KeyCode::KeyW) || keys.just_pressed(KeyCode::Space)) {
+        velocity.linvel.y = JUMP_POWER;
+    }
+
+    if player.on_ground {
+        if keys.pressed(KeyCode::KeyA) {
+            desired_x_velocity -= PLAYER_SPEED;
         }
-    } else {
-        player_velocity.0.y = 0.;
+
+        if keys.pressed(KeyCode::KeyD) {
+            desired_x_velocity += PLAYER_SPEED;
+        }
+
+        if desired_x_velocity != 0. {
+            velocity.linvel.x = desired_x_velocity;
+        }
+    } else if velocity.linvel.x > 0. {
+        if keys.pressed(KeyCode::KeyA) {
+            velocity.linvel.x -= MID_AIR_SPEED_DEGREDATION * time.delta_seconds();
+        }
+    } else if keys.pressed(KeyCode::KeyD) {
+        velocity.linvel.x += MID_AIR_SPEED_DEGREDATION * time.delta_seconds();
     }
 }
 
-fn apply_player_velocity(
-    mut player_query: Query<(&mut KinematicCharacterController, &PlayerVelocity)>,
+fn check_player_on_ground(
+    mut player_query: Query<(Entity, &mut Player, &Transform)>,
+    rapier_context: Res<RapierContext>,
 ) {
-    let (mut character_controller, player_velocity) = player_query.single_mut();
+    let (entity, mut player, transform) = player_query.single_mut();
 
-    if player_velocity.0 != Vec2::ZERO {
-        character_controller.translation = Some(player_velocity.0);
+    // shape cast to check if on ground
+
+    let cast_start = transform.translation.truncate() - Vec2::new(0., 0.2);
+    let shape_rotation = 0.;
+    let cast_direction = Vec2::NEG_Y;
+    let collider_shape = &player.collider;
+    let cast_options = default();
+    let query_filter = QueryFilter::default().exclude_collider(entity);
+
+    if let Some((_entity, shape_hit)) = rapier_context.cast_shape(
+        cast_start,
+        shape_rotation,
+        cast_direction,
+        collider_shape,
+        cast_options,
+        query_filter,
+    ) {
+        player.on_ground = shape_hit.time_of_impact == 0.;
     }
 }
