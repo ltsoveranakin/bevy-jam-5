@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 const PLAYER_SPEED: f32 = 0.5;
-const JUMP_POWER: f32 = 1.;
+const JUMP_POWER: f32 = 2.;
 const PLAYER_GRAVITY: f32 = 10.;
 const PLAYER_MAX_GRAVITY: f32 = 100.;
 
@@ -33,7 +33,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             Player,
             PlayerVelocity(default()),
             InheritedVisibility::default(),
-            Collider::ball(16.),
+            Collider::capsule_y(3., 6.),
             RigidBody::KinematicVelocityBased,
             KinematicCharacterController::default(),
             KinematicCharacterControllerOutput::default(),
@@ -44,6 +44,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
                 texture: asset_server.load("image/character/snowman.png"),
+                transform: Transform::from_xyz(0., 6., 1.),
                 ..default()
             });
         });
@@ -52,7 +53,6 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn move_player(
     mut player_query: Query<(&mut PlayerVelocity, &KinematicCharacterControllerOutput)>,
     keys: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
 ) {
     let (mut player_velocity, controller_output) = player_query.single_mut();
 
@@ -95,7 +95,6 @@ fn apply_player_velocity(
 ) {
     let (mut character_controller, player_velocity) = player_query.single_mut();
 
-    println!("{}", player_velocity.0);
     if player_velocity.0 != Vec2::ZERO {
         character_controller.translation = Some(player_velocity.0);
     }
