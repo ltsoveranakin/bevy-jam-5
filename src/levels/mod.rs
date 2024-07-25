@@ -5,13 +5,14 @@ use bevy_rapier2d::prelude::Collider;
 use crate::debug::DebugVisibility;
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
+use crate::math::tile_pos_to_world_pos;
 use crate::player::Player;
 
-mod data;
-mod level_loader;
+pub mod data;
+pub mod level_loader;
 
-const TILE_MAP_SIZE: u32 = 32;
-const TILE_SIZE: f32 = 16.;
+pub const TILE_MAP_SIZE: u32 = 32;
+pub const TILE_SIZE: f32 = 16.;
 
 pub struct LevelPlugin;
 
@@ -120,8 +121,4 @@ fn level_data_ready(
 
         player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
     }
-}
-
-fn tile_pos_to_world_pos(tile_pos: UVec2, z_index: f32) -> Vec3 {
-    (tile_pos * TILE_SIZE as u32).as_vec2().extend(z_index)
 }

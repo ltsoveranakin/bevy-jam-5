@@ -11,6 +11,7 @@ use crate::player::PlayerPlugin;
 mod camera;
 mod debug;
 mod levels;
+mod math;
 mod player;
 
 fn main() {

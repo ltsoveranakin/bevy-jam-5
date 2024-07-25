@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use crate::levels::data::LevelData;
+use crate::levels::level_loader::LevelDataHandleRes;
+use crate::math::tile_pos_to_world_pos;
+
 const PLAYER_SPEED: f32 = 60.;
 const JUMP_POWER: f32 = 300.;
 const MID_AIR_SPEED_DEGREDATION: f32 = 60.;
@@ -9,13 +13,17 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player).add_systems(
-            Update,
-            (
-                check_player_on_ground,
-                move_player.after(check_player_on_ground),
-            ),
-        );
+        app.add_event::<PlayerDeathEvent>()
+            .add_systems(Startup, spawn_player)
+            .add_systems(
+                Update,
+                (
+                    check_player_on_ground,
+                    move_player.after(check_player_on_ground),
+                    check_player_death,
+                    respawn_player_death,
+                ),
+            );
     }
 }
 
@@ -111,5 +119,37 @@ fn check_player_on_ground(
         query_filter,
     ) {
         player.on_ground = shape_hit.time_of_impact == 0.;
+    }
+}
+
+#[derive(Event, Default)]
+pub struct PlayerDeathEvent;
+
+fn check_player_death(
+    player_query: Query<&Transform, With<Player>>,
+    mut player_death_ev: EventWriter<PlayerDeathEvent>,
+) {
+    let transform = player_query.single();
+
+    if transform.translation.y < -20. {
+        player_death_ev.send_default();
+    }
+}
+
+fn respawn_player_death(
+    mut player_query: Query<&mut Transform, With<Player>>,
+    level_data_handle: Res<LevelDataHandleRes>,
+    level_data_assets: Res<Assets<LevelData>>,
+    mut player_death_ev: EventReader<PlayerDeathEvent>,
+) {
+    let mut player_transform = player_query.single_mut();
+    if player_death_ev.read().next().is_some() {
+        if let Some(handle) = level_data_handle.0.clone() {
+            let level_data = level_data_assets.get(handle.id()).unwrap();
+            player_transform.translation = tile_pos_to_world_pos(
+                level_data.spawn_location.into(),
+                player_transform.translation.z,
+            );
+        }
     }
 }

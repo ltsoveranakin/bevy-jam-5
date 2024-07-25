@@ -43,7 +43,7 @@ impl AssetLoader for LevelJSONAssetLoader {
 }
 
 #[derive(Resource, Default)]
-struct LevelDataHandleRes(Option<Handle<LevelData>>);
+pub struct LevelDataHandleRes(pub Option<Handle<LevelData>>);
 
 fn load_level(
     mut set_level_event: EventReader<LoadLevelEvent>,

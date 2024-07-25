@@ -150,7 +150,15 @@
     {
       "tile_type": "Dirt",
       "off": {
-        "x": 6,
+        "x": 7,
+        "y": 2
+      },
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": {
+        "x": 8,
         "y": 2
       },
       "over": "Grass"
