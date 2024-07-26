@@ -5,9 +5,9 @@ use bevy::asset::Asset;
 use bevy::math::UVec2;
 use bevy::prelude::TypePath;
 use bevy_ecs_tilemap::tiles::TilePos;
+use serde::{Deserialize, Deserializer};
 use serde::de;
 use serde::de::Visitor;
-use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct LocationData {
@@ -69,6 +69,7 @@ impl From<LocationData> for UVec2 {
 pub enum TileTypeData {
     Dirt,
     Stone,
+    Water,
 }
 
 impl TileTypeData {
@@ -76,6 +77,7 @@ impl TileTypeData {
         match self {
             Self::Dirt => 0,
             Self::Stone => 1,
+            Self::Water => 3,
         }
     }
 }
