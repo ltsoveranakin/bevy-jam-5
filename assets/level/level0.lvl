@@ -91,6 +91,76 @@
     {
       "tile_type": "Dirt",
       "off": "1,2"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "9,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "10,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "11,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "12,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "5,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "6,2",
+      "over": "Grass"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "5,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "6,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "7,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "8,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "9,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "10,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "11,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "12,1"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "5,0"
+    },
+    {
+      "tile_type": "Dirt",
+      "off": "6,0"
     }
   ]
 }
