@@ -1,8 +1,13 @@
+use std::fmt::Formatter;
+use std::io;
+
 use bevy::asset::{AssetLoader, AsyncReadExt, io::Reader, LoadContext};
 use bevy::prelude::*;
+use bevy::utils::HashSet;
+use thiserror::Error;
 
 use crate::levels::{level_data_ready, LoadLevelEvent};
-use crate::levels::data::LevelData;
+use crate::levels::data::{LevelData, LocationData};
 
 pub struct LevelLoaderPlugin;
 
@@ -19,10 +24,46 @@ impl Plugin for LevelLoaderPlugin {
 #[derive(Default)]
 struct LevelJSONAssetLoader;
 
+#[derive(Debug)]
+enum InvalidLevelErrorReason {
+    DuplicateTileLocation(LocationData),
+}
+
+#[derive(Debug, Error)]
+struct InvalidLevelError {
+    reason: InvalidLevelErrorReason,
+}
+
+impl InvalidLevelError {
+    fn new(reason: InvalidLevelErrorReason) -> Self {
+        Self { reason }
+    }
+}
+
+impl std::fmt::Display for InvalidLevelError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self.reason {
+            InvalidLevelErrorReason::DuplicateTileLocation(loc) => {
+                write!(f, "Duplicate tile location at: {}", loc)
+            }
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+enum LevelJSONAssetLoaderError {
+    #[error("Could not parse json: {0}")]
+    SerdeParse(#[from] serde_json::Error),
+    #[error("Could not read file: {0}")]
+    IO(#[from] io::Error),
+    #[error("Level data was invalid: {0}")]
+    InvalidLevel(#[from] InvalidLevelError),
+}
+
 impl AssetLoader for LevelJSONAssetLoader {
     type Asset = LevelData;
     type Settings = ();
-    type Error = std::io::Error;
+    type Error = LevelJSONAssetLoaderError;
 
     async fn load<'a>(
         &'a self,
@@ -34,6 +75,20 @@ impl AssetLoader for LevelJSONAssetLoader {
         reader.read_to_end(&mut bytes).await?;
 
         let level_json: LevelData = serde_json::from_slice(bytes.as_slice())?;
+
+        let mut tiles_set = HashSet::new();
+
+        for tile in level_json.tiles.iter() {
+            if tiles_set.contains(&tile.off) {
+                return Err(InvalidLevelError::new(
+                    InvalidLevelErrorReason::DuplicateTileLocation(tile.off),
+                )
+                .into());
+            } else {
+                tiles_set.insert(tile.off);
+            }
+        }
+
         Ok(level_json)
     }
 

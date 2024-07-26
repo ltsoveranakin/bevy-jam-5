@@ -312,6 +312,7 @@ dependencies = [
  "bevy_rapier2d",
  "serde",
  "serde_json",
+ "thiserror",
 ]
 
 [[package]]

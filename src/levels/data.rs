@@ -1,13 +1,21 @@
+use std::fmt::{Display, Formatter};
+
 use bevy::asset::Asset;
 use bevy::math::UVec2;
 use bevy::prelude::TypePath;
 use bevy_ecs_tilemap::tiles::TilePos;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct LocationData {
     pub x: u32,
     pub y: u32,
+}
+
+impl Display for LocationData {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "x: {}, y: {}", self.x, self.y)
+    }
 }
 
 impl From<LocationData> for TilePos {
