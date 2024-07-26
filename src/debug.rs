@@ -31,11 +31,14 @@ fn toggle_debug_state(
     debug_state: Res<State<DebugState>>,
     mut next_debug_state: ResMut<NextState<DebugState>>,
 ) {
-    if keys.just_pressed(KeyCode::Backquote) {
-        if *debug_state == DebugState::Off {
-            next_debug_state.set(DebugState::On);
-        } else {
-            next_debug_state.set(DebugState::Off);
+    #[cfg(debug_assertions)]
+    {
+        if keys.just_pressed(KeyCode::Backquote) {
+            if *debug_state == DebugState::Off {
+                next_debug_state.set(DebugState::On);
+            } else {
+                next_debug_state.set(DebugState::Off);
+            }
         }
     }
 }
