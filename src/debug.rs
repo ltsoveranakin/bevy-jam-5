@@ -14,7 +14,7 @@ impl Plugin for DebugPlugin {
 }
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-enum DebugState {
+pub enum DebugState {
     #[default]
     Off,
     On,

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::Collider;
 
-use crate::debug::DebugVisibility;
+use crate::debug::{DebugState, DebugVisibility};
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
@@ -36,6 +36,7 @@ fn level_data_ready(
     tilemap_query: Query<Entity, With<TilemapType>>,
     mut player_query: Query<&mut Transform, With<Player>>,
     mut level_data_loaded_event: EventReader<LevelDataLoadedEvent>,
+    debug_state: Res<State<DebugState>>,
     level_data_assets: Res<Assets<LevelData>>,
     asset_server: Res<AssetServer>,
 ) {
@@ -111,7 +112,10 @@ fn level_data_ready(
                                 scale: Vec3::splat(0.2),
                                 ..default()
                             },
-                            visibility: Visibility::Hidden,
+                            visibility: match debug_state.get() {
+                                DebugState::On => Visibility::Visible,
+                                DebugState::Off => Visibility::Hidden,
+                            },
                             ..default()
                         },
                         DebugVisibility,
