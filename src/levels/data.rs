@@ -50,6 +50,14 @@ pub enum OverlayData {
     Grass,
 }
 
+impl OverlayData {
+    pub fn texture_index(&self) -> u32 {
+        match self {
+            Self::Grass => 2,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct TileData {
     pub tile_type: TileTypeData,

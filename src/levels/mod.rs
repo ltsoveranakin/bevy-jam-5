@@ -43,7 +43,7 @@ fn level_data_ready(
         let mut player_transform = player_query.single_mut();
 
         let level_data = level_data_assets.get(level_data.0).unwrap();
-        if let Ok(tilemap_entity) = tilemap_query.get_single() {
+        for tilemap_entity in tilemap_query.iter() {
             commands.entity(tilemap_entity).despawn_recursive();
         }
 
@@ -55,6 +55,9 @@ fn level_data_ready(
         let tile_set_handle: Handle<Image> = asset_server.load("image/tile/tile_set.png");
         let mut tile_storage = TileStorage::empty(tile_map_size);
         let tile_map_entity = commands.spawn_empty().id();
+
+        let mut overlay_tile_storage = TileStorage::empty(tile_map_size);
+        let overlay_tile_map_entity = commands.spawn_empty().id();
 
         for tile_data in &level_data.tiles {
             let tile_pos = TilePos::new(tile_data.off.x, tile_data.off.y);
@@ -73,6 +76,22 @@ fn level_data_ready(
                     InheritedVisibility::default(),
                 ))
                 .id();
+
+            if let Some(over) = &tile_data.over {
+                let overlay_tile_entity = commands
+                    .spawn(TileBundle {
+                        position: tile_pos,
+                        tilemap_id: TilemapId(overlay_tile_map_entity),
+                        texture_index: TileTextureIndex(over.texture_index()),
+                        ..default()
+                    })
+                    .id();
+
+                commands
+                    .entity(overlay_tile_map_entity)
+                    .add_child(overlay_tile_entity);
+                overlay_tile_storage.set(&tile_pos, tile_entity);
+            }
 
             let collider_entity = commands
                 .spawn((
@@ -114,10 +133,22 @@ fn level_data_ready(
             size: tile_map_size,
             storage: tile_storage,
             tile_size,
-            texture: TilemapTexture::Single(tile_set_handle),
+            texture: TilemapTexture::Single(tile_set_handle.clone()),
             transform: Transform::from_xyz(0., 0., 0.),
             ..default()
         });
+
+        commands
+            .entity(overlay_tile_map_entity)
+            .insert(TilemapBundle {
+                grid_size,
+                size: tile_map_size,
+                storage: overlay_tile_storage,
+                tile_size,
+                texture: TilemapTexture::Single(tile_set_handle),
+                transform: Transform::from_xyz(0., 0., 1.),
+                ..default()
+            });
 
         player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
     }

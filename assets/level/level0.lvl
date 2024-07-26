@@ -88,32 +88,28 @@
       "off": {
         "x": 3,
         "y": 2
-      },
-      "over": "Grass"
+      }
     },
     {
       "tile_type": "Dirt",
       "off": {
         "x": 2,
         "y": 2
-      },
-      "over": "Grass"
+      }
     },
     {
       "tile_type": "Dirt",
       "off": {
         "x": 1,
         "y": 2
-      },
-      "over": "Grass"
+      }
     },
     {
       "tile_type": "Dirt",
       "off": {
         "x": 0,
         "y": 2
-      },
-      "over": "Grass"
+      }
     },
     {
       "tile_type": "Dirt",

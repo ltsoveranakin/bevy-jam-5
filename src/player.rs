@@ -55,7 +55,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
                 texture: asset_server.load("image/character/snowman.png"),
-                transform: Transform::from_xyz(0., 6., 1.),
+                transform: Transform::from_xyz(0., 6., 2.),
                 ..default()
             });
         });
