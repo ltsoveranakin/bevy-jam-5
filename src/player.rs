@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use crate::day_night::DayNightCycleState;
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::LevelDataHandleRes;
 use crate::math::tile_pos_to_world_pos;
 
-const PLAYER_SPEED: f32 = 60.;
+const PLAYER_MAX_SPEED: f32 = 60.;
 const JUMP_POWER: f32 = 300.;
 const MID_AIR_SPEED_DEGREDATION: f32 = 100.;
 
@@ -80,11 +81,11 @@ fn move_player(
 
     if player.on_ground {
         if keys.pressed(KeyCode::KeyA) {
-            desired_x_velocity -= PLAYER_SPEED;
+            desired_x_velocity -= PLAYER_MAX_SPEED;
         }
 
         if keys.pressed(KeyCode::KeyD) {
-            desired_x_velocity += PLAYER_SPEED;
+            desired_x_velocity += PLAYER_MAX_SPEED;
         }
 
         if desired_x_velocity != 0. {
@@ -152,9 +153,11 @@ fn check_player_out_of_bounds(
 fn respawn_player_death(
     mut player_death_ev: EventReader<PlayerDeathEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
+    mut day_night_next_state: ResMut<NextState<DayNightCycleState>>,
 ) {
     if player_death_ev.read().next().is_some() {
         respawn_player.send_default();
+        day_night_next_state.set(DayNightCycleState::Day);
     }
 }
 

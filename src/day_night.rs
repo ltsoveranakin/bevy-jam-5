@@ -13,7 +13,7 @@ impl Plugin for DayNightPlugin {
 }
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
-enum DayNightCycleState {
+pub enum DayNightCycleState {
     #[default]
     Day,
     Night,
