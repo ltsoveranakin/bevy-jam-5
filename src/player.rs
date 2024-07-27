@@ -1,14 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::day_night::DayNightCycleState;
+use crate::day_night::{DayNightState, SetDayNightEvent};
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::LevelDataHandleRes;
 use crate::math::tile_pos_to_world_pos;
 
 const PLAYER_MAX_SPEED: f32 = 60.;
 const JUMP_POWER: f32 = 300.;
-const MID_AIR_SPEED_DEGREDATION: f32 = 100.;
+const MID_AIR_SPEED_DEGRADATION: f32 = 100.;
 
 pub struct PlayerPlugin;
 
@@ -23,14 +23,20 @@ impl Plugin for PlayerPlugin {
                 (
                     check_player_on_ground,
                     move_player.after(check_player_on_ground),
-                    check_player_out_of_bounds,
-                    respawn_player_finish_level.after(check_player_out_of_bounds),
-                    respawn_player.after(respawn_player_finish_level),
-                    respawn_player_death,
+                    (
+                        check_player_out_of_bounds,
+                        respawn_player_death.after(check_player_out_of_bounds),
+                        respawn_player_finish_level.after(check_player_out_of_bounds),
+                    )
+                        .in_set(CheckPlayerForRespawn),
+                    respawn_player.after(CheckPlayerForRespawn),
                 ),
             );
     }
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct CheckPlayerForRespawn;
 
 #[derive(Component)]
 pub struct Player {
@@ -93,10 +99,10 @@ fn move_player(
         }
     } else if velocity.linvel.x > 0. {
         if keys.pressed(KeyCode::KeyA) {
-            velocity.linvel.x -= MID_AIR_SPEED_DEGREDATION * time.delta_seconds();
+            velocity.linvel.x -= MID_AIR_SPEED_DEGRADATION * time.delta_seconds();
         }
     } else if keys.pressed(KeyCode::KeyD) {
-        velocity.linvel.x += MID_AIR_SPEED_DEGREDATION * time.delta_seconds();
+        velocity.linvel.x += MID_AIR_SPEED_DEGRADATION * time.delta_seconds();
     }
 }
 
@@ -153,20 +159,34 @@ fn check_player_out_of_bounds(
 fn respawn_player_death(
     mut player_death_ev: EventReader<PlayerDeathEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
-    mut day_night_next_state: ResMut<NextState<DayNightCycleState>>,
+    mut set_day_night: EventWriter<SetDayNightEvent>,
 ) {
     if player_death_ev.read().next().is_some() {
+        println!("death");
         respawn_player.send_default();
-        day_night_next_state.set(DayNightCycleState::Day);
+        set_day_night.send(SetDayNightEvent(DayNightState::Day));
     }
 }
 
 fn respawn_player_finish_level(
     mut player_finish_level_event: EventReader<PlayerFinishLevelEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
+    mut set_day_night: EventWriter<SetDayNightEvent>,
+    day_night_state: Res<State<DayNightState>>,
 ) {
     if player_finish_level_event.read().next().is_some() {
         respawn_player.send_default();
+        println!("level fin");
+        match day_night_state.get() {
+            DayNightState::Day => {
+                // replay same level, but at night
+                set_day_night.send(SetDayNightEvent(DayNightState::Night));
+            }
+            DayNightState::Night => {
+                // next level
+                set_day_night.send(SetDayNightEvent(DayNightState::Day));
+            }
+        }
     }
 }
 
