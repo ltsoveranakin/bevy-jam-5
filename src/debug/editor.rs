@@ -67,7 +67,8 @@ fn toggle_editor_mode(
             println!("Press 'n' to switch to next tile");
             println!("Press 'k' to save to file in current directory");
             println!("Left click to set tile");
-            println!("Right click to delete tile in current scope (overlay vs. regular tile)")
+            println!("Right click to delete tile in current scope (overlay vs. regular tile)");
+            println!("File needs to be manually copied to assets/level");
         } else {
             next_editor_state.set(EditorState::Off);
             println!("Editor OFF");
@@ -213,11 +214,11 @@ fn clear_tile(mut commands: Commands, map_storage: &mut TileStorage, tile_pos: T
 }
 
 fn save_current_tile_map(
-    mut commands: Commands,
     main_map_query: Query<&TileStorage, With<MainMap>>,
     overlay_map_query: Query<&TileStorage, With<OverlayMap>>,
     tile_query: Query<(&TilePos, &TileTextureIndex)>,
     keys: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
 ) {
     if keys.just_pressed(KeyCode::KeyK) {
         let tile_storage = main_map_query.single();
@@ -250,11 +251,13 @@ fn save_current_tile_map(
         }
 
         let json_str = serde_json::to_string(&level_data).unwrap();
-        let mut file = File::create("level.out.json").unwrap();
+
+        let rand_id = time.elapsed_seconds() as i32;
+        let mut file = File::create(format!("level-randid-{}.out.json", rand_id)).unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
 
-        println!("Wrote data to file at level.out.json")
+        println!("Wrote data to file at level-randid-{}.out.json", rand_id)
     }
 }
