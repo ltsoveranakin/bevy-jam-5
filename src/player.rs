@@ -20,7 +20,7 @@ impl Plugin for PlayerPlugin {
                 (
                     check_player_on_ground,
                     move_player.after(check_player_on_ground),
-                    check_player_death,
+                    check_player_out_of_bounds,
                     respawn_player_death,
                 ),
             );
@@ -125,7 +125,7 @@ fn check_player_on_ground(
 #[derive(Event, Default)]
 pub struct PlayerDeathEvent;
 
-fn check_player_death(
+fn check_player_out_of_bounds(
     player_query: Query<&Transform, With<Player>>,
     mut player_death_ev: EventWriter<PlayerDeathEvent>,
 ) {
@@ -134,22 +134,25 @@ fn check_player_death(
     if transform.translation.y < -20. {
         player_death_ev.send_default();
     }
+
+    if transform.translation.x > 320. {
+        println!("fin level");
+    }
 }
 
 fn respawn_player_death(
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<(&mut Transform, &mut Velocity), With<Player>>,
     level_data_handle: Res<LevelDataHandleRes>,
     level_data_assets: Res<Assets<LevelData>>,
     mut player_death_ev: EventReader<PlayerDeathEvent>,
 ) {
-    let mut player_transform = player_query.single_mut();
+    let (mut transform, mut velocity) = player_query.single_mut();
     if player_death_ev.read().next().is_some() {
         if let Some(handle) = level_data_handle.0.clone() {
             let level_data = level_data_assets.get(handle.id()).unwrap();
-            player_transform.translation = tile_pos_to_world_pos(
-                level_data.spawn_location.into(),
-                player_transform.translation.z,
-            );
+            velocity.linvel = Vec2::ZERO;
+            transform.translation =
+                tile_pos_to_world_pos(level_data.spawn_location.into(), transform.translation.z);
         }
     }
 }
