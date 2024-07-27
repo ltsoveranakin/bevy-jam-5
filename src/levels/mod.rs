@@ -16,10 +16,6 @@ pub const TILE_MAP_SIZE_F32: f32 = TILE_MAP_SIZE as f32;
 pub const TILE_SIZE: f32 = 16.;
 pub const HALF_TILE_SIZE: f32 = 8.;
 
-pub const TILE_MAP_SIZE_STRUCT: TilemapSize = TilemapSize::new(TILE_MAP_SIZE, TILE_MAP_SIZE);
-pub const TILE_MAP_GRID_SIZE: TilemapGridSize =
-    TilemapGridSize::new(TILE_MAP_SIZE_F32, TILE_MAP_SIZE_F32);
-
 pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
@@ -60,7 +56,7 @@ fn level_data_ready(
             commands.entity(tile_map_entity).despawn_recursive();
         }
 
-        let tile_map_size = TILE_MAP_SIZE_STRUCT;
+        let tile_map_size = TilemapSize::new(TILE_MAP_SIZE, TILE_MAP_SIZE);
 
         let tile_set_handle: Handle<Image> = asset_server.load("image/tile/tile_set.png");
         let mut tile_storage = TileStorage::empty(tile_map_size);

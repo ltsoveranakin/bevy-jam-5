@@ -5,9 +5,7 @@ use bevy::asset::Asset;
 use bevy::math::UVec2;
 use bevy::prelude::TypePath;
 use bevy_ecs_tilemap::tiles::TilePos;
-use serde::{Deserialize, Deserializer};
-use serde::de;
-use serde::de::Visitor;
+use serde::{de, de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct LocationData {
@@ -47,6 +45,16 @@ impl<'de> Deserialize<'de> for LocationData {
     }
 }
 
+impl Serialize for LocationData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{},{}", self.x, self.y);
+        serializer.serialize_str(&s)
+    }
+}
+
 impl Display for LocationData {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "x: {}, y: {}", self.x, self.y)
@@ -65,7 +73,7 @@ impl From<LocationData> for UVec2 {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum TileTypeData {
     Dirt,
     Stone,
@@ -80,9 +88,18 @@ impl TileTypeData {
             Self::Water => 3,
         }
     }
+
+    pub fn from_texture_index(texture_index: u32) -> Self {
+        match texture_index {
+            0 => Self::Dirt,
+            1 => Self::Stone,
+            3 => Self::Water,
+            _ => unreachable!(),
+        }
+    }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum OverlayData {
     Grass,
 }
@@ -95,14 +112,14 @@ impl OverlayData {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TileData {
     pub tile_type: TileTypeData,
     pub off: LocationData,
     pub over: Option<OverlayData>,
 }
 
-#[derive(Deserialize, Asset, TypePath, Debug)]
+#[derive(Deserialize, Serialize, Asset, TypePath, Debug)]
 pub struct LevelData {
     pub spawn_location: LocationData,
     pub tiles: Vec<TileData>,

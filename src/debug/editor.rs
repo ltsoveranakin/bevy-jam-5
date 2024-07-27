@@ -1,9 +1,12 @@
+use std::fs::File;
+use std::io::Write;
+
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::debug::{DebugState, DebugUpdateSet};
 use crate::levels::{MainMap, OverlayMap};
-use crate::levels::data::{OverlayData, TileTypeData};
+use crate::levels::data::{LevelData, LocationData, OverlayData, TileData, TileTypeData};
 use crate::math::world_pos_to_tile_pos;
 
 pub struct DebugEditorPlugin;
@@ -18,7 +21,12 @@ impl Plugin for DebugEditorPlugin {
                 Update,
                 (
                     toggle_editor_mode.in_set(DebugUpdateSet),
-                    (change_editor_tile, editor_click_tile, update_cursor_pos)
+                    (
+                        change_editor_tile,
+                        editor_click_tile,
+                        update_cursor_pos,
+                        save_current_tile_map,
+                    )
                         .in_set(EditorUpdateSet),
                 ),
             );
@@ -171,5 +179,39 @@ fn set_tile_map_tile(
             .id();
 
         tile_storage.set(&tile_pos, tile_entity);
+    }
+}
+
+fn save_current_tile_map(
+    tile_map_query: Query<&TileStorage, With<MainMap>>,
+    tile_query: Query<(&TilePos, &TileTextureIndex)>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::KeyK) {
+        let tile_storage = tile_map_query.single();
+
+        let mut level_data = LevelData {
+            spawn_location: LocationData { x: 0, y: 0 },
+            tiles: vec![],
+        };
+
+        for tile_entity in tile_storage.iter().flatten() {
+            let (tile_pos, texture_index) = tile_query.get(*tile_entity).unwrap();
+
+            level_data.tiles.push(TileData {
+                tile_type: TileTypeData::from_texture_index(texture_index.0),
+                off: LocationData {
+                    x: tile_pos.x,
+                    y: tile_pos.y,
+                },
+                over: None,
+            });
+        }
+
+        let json_str = serde_json::to_string(&level_data).unwrap();
+        let mut file = File::create("level_out.lvl").unwrap();
+
+        file.write_all(json_str.as_bytes())
+            .expect("Unable to write to file");
     }
 }

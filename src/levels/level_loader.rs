@@ -93,7 +93,7 @@ impl AssetLoader for LevelJSONAssetLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        &["lvl"]
+        &["lvl.json"]
     }
 }
 
@@ -106,7 +106,7 @@ fn load_level(
     mut level_data_json_handle: ResMut<LevelDataHandleRes>,
 ) {
     if let Some(level_id) = set_level_event.read().next() {
-        let level_handle = asset_server.load(format!("level/level{}.lvl", level_id.0));
+        let level_handle = asset_server.load(format!("level/level{}.lvl.json", level_id.0));
         level_data_json_handle.0 = Some(level_handle);
     }
 }
