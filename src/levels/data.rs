@@ -73,7 +73,7 @@ impl From<LocationData> for UVec2 {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Hash, Debug)]
 pub enum TileTypeData {
     Dirt,
     Stone,
@@ -99,7 +99,7 @@ impl TileTypeData {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Hash, Debug)]
 pub enum OverlayData {
     Grass,
 }
@@ -119,14 +119,14 @@ impl OverlayData {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Hash, Debug)]
 pub struct TileData {
     pub tile_type: TileTypeData,
     pub off: LocationData,
     pub over: Option<OverlayData>,
 }
 
-#[derive(Deserialize, Serialize, Asset, TypePath, Debug)]
+#[derive(Deserialize, Serialize, Asset, TypePath, Hash, Debug)]
 pub struct LevelData {
     pub spawn_location: LocationData,
     pub tiles: Vec<TileData>,

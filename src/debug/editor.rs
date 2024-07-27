@@ -1,7 +1,9 @@
 use std::fs::File;
+use std::hash::{Hash, Hasher};
 use std::io::Write;
 
 use bevy::prelude::*;
+use bevy::utils::AHasher;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::debug::DebugUpdateSet;
@@ -252,12 +254,16 @@ fn save_current_tile_map(
 
         let json_str = serde_json::to_string(&level_data).unwrap();
 
-        let rand_id = time.elapsed_seconds() as i32;
-        let mut file = File::create(format!("level-randid-{}.out.json", rand_id)).unwrap();
+        let mut hasher = AHasher::default();
+
+        level_data.hash(&mut hasher);
+        let hash_value = hasher.finish() as i16;
+
+        let mut file = File::create(format!("level-randid-{}.out.json", hash_value)).unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
 
-        println!("Wrote data to file at level-randid-{}.out.json", rand_id)
+        println!("Wrote data to file at level-randid-{}.out.json", hash_value)
     }
 }
