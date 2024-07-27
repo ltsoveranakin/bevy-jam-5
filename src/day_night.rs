@@ -8,9 +8,25 @@ impl Plugin for DayNightPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<DayNightState>()
             .add_event::<SetDayNightEvent>()
-            .add_systems(Update, (set_day_night_cycle));
+            .configure_sets(
+                Update,
+                (
+                    NightCycleSet.run_if(in_state(DayNightState::Night)),
+                    DayCycleSet.run_if(in_state(DayNightState::Day)),
+                ),
+            )
+            .add_systems(Update, set_day_night_cycle);
     }
 }
+
+/// This set only runs at night
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct NightCycleSet;
+
+/// This set only runs during the day
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DayCycleSet;
 
 #[derive(States, Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DayNightState {

@@ -5,8 +5,11 @@ use crate::day_night::{DayNightState, SetDayNightEvent};
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::LevelDataHandleRes;
 use crate::math::tile_pos_to_world_pos;
+use crate::player::melting::{MeltingPlugin, MeltStage, TimeUnderSun};
 
-const PLAYER_MAX_SPEED: f32 = 60.;
+mod melting;
+
+const PLAYER_MAX_SPEED: f32 = 80.;
 const JUMP_POWER: f32 = 300.;
 const MID_AIR_SPEED_DEGRADATION: f32 = 100.;
 
@@ -17,6 +20,7 @@ impl Plugin for PlayerPlugin {
         app.add_event::<PlayerDeathEvent>()
             .add_event::<PlayerFinishLevelEvent>()
             .add_event::<RespawnPlayerEvent>()
+            .add_plugins(MeltingPlugin)
             .add_systems(Startup, spawn_player)
             .add_systems(
                 Update,
@@ -30,6 +34,7 @@ impl Plugin for PlayerPlugin {
                     )
                         .in_set(CheckPlayerForRespawn),
                     respawn_player.after(CheckPlayerForRespawn),
+                    key_respawn,
                 ),
             );
     }
@@ -42,6 +47,7 @@ struct CheckPlayerForRespawn;
 pub struct Player {
     on_ground: bool,
     collider: Collider,
+    melt_stage: MeltStage,
 }
 
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -50,6 +56,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             Player {
                 on_ground: false,
                 collider: Collider::capsule_y(3., 5.8),
+                melt_stage: MeltStage::None,
             },
             InheritedVisibility::default(),
             Collider::capsule_y(3., 6.),
@@ -95,7 +102,7 @@ fn move_player(
         }
 
         if desired_x_velocity != 0. {
-            velocity.linvel.x = desired_x_velocity;
+            velocity.linvel.x = desired_x_velocity * player.melt_stage.get_speed_multiplier();
         }
     } else if velocity.linvel.x > 0. {
         if keys.pressed(KeyCode::KeyA) {
@@ -157,23 +164,28 @@ fn check_player_out_of_bounds(
 }
 
 fn respawn_player_death(
+    mut player_query: Query<&mut Player>,
     mut player_death_ev: EventReader<PlayerDeathEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
 ) {
+    let mut player = player_query.single_mut();
     if player_death_ev.read().next().is_some() {
         println!("death");
         respawn_player.send_default();
         set_day_night.send(SetDayNightEvent(DayNightState::Day));
+        player.melt_stage = MeltStage::None;
     }
 }
 
 fn respawn_player_finish_level(
+    mut player_query: Query<&mut Player>,
     mut player_finish_level_event: EventReader<PlayerFinishLevelEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
     day_night_state: Res<State<DayNightState>>,
 ) {
+    let mut player = player_query.single_mut();
     if player_finish_level_event.read().next().is_some() {
         respawn_player.send_default();
         println!("level fin");
@@ -185,6 +197,7 @@ fn respawn_player_finish_level(
             DayNightState::Night => {
                 // next level
                 set_day_night.send(SetDayNightEvent(DayNightState::Day));
+                player.melt_stage = MeltStage::None;
             }
         }
     }
@@ -194,10 +207,11 @@ fn respawn_player_finish_level(
 pub struct RespawnPlayerEvent;
 
 fn respawn_player(
-    mut player_query: Query<(&mut Transform, &mut Velocity), With<Player>>,
+    mut player_query: Query<(&mut Transform, &mut Velocity)>,
     level_data_handle: Res<LevelDataHandleRes>,
     level_data_assets: Res<Assets<LevelData>>,
     mut respawn_player_ev: EventReader<RespawnPlayerEvent>,
+    mut time_under_sun: ResMut<TimeUnderSun>,
 ) {
     let (mut transform, mut velocity) = player_query.single_mut();
     if respawn_player_ev.read().next().is_some() {
@@ -206,6 +220,13 @@ fn respawn_player(
             velocity.linvel = Vec2::ZERO;
             transform.translation =
                 tile_pos_to_world_pos(level_data.spawn_location.into(), transform.translation.z);
+            time_under_sun.reset();
         }
+    }
+}
+
+fn key_respawn(keys: Res<ButtonInput<KeyCode>>, mut player_death: EventWriter<PlayerDeathEvent>) {
+    if keys.just_pressed(KeyCode::KeyR) {
+        player_death.send_default();
     }
 }
