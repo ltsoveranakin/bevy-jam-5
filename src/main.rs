@@ -6,6 +6,7 @@ use bevy_ecs_tilemap::TilemapPlugin;
 use bevy_rapier2d::prelude::*;
 
 use crate::camera::CameraPlugin;
+use crate::day_night::DayNightPlugin;
 use crate::debug::DebugPlugin;
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
@@ -15,6 +16,7 @@ mod debug;
 mod levels;
 mod math;
 mod player;
+mod day_night;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "full");
@@ -38,6 +40,6 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.),
             RapierDebugRenderPlugin::default().disabled(),
         ))
-        .add_plugins((PlayerPlugin, LevelPlugin, CameraPlugin, DebugPlugin))
+        .add_plugins((PlayerPlugin, LevelPlugin, CameraPlugin, DebugPlugin, DayNightPlugin))
         .run();
 }

@@ -2,6 +2,9 @@ use bevy::prelude::*;
 
 use crate::debug::DebugUpdateSet;
 
+pub const DAY_COLOR: Color = Color::srgb(0.31, 0.75, 0.88);
+pub const NIGHT_COLOR: Color = Color::srgb(0., 0.11, 0.12);
+
 const CAMERA_MOVE_SPEED: f32 = 50.;
 
 pub struct CameraPlugin;
@@ -21,7 +24,7 @@ fn spawn_camera(mut commands: Commands) {
             ..default()
         },
         camera: Camera {
-            clear_color: ClearColorConfig::Custom(Color::srgb_u8(51, 141, 242)),
+            clear_color: ClearColorConfig::Custom(DAY_COLOR),
             ..default()
         },
         ..default()

@@ -16,13 +16,16 @@ pub const TILE_MAP_SIZE_F32: f32 = TILE_MAP_SIZE as f32;
 pub const TILE_SIZE: f32 = 16.;
 pub const HALF_TILE_SIZE: f32 = 8.;
 
+pub const MAX_LEVEL: u32 = 0;
+
 pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelLoaderPlugin)
             .add_event::<LoadLevelEvent>()
-            .add_systems(Startup, setup);
+            .add_systems(Startup, setup)
+            .add_systems(Update, level_data_ready);
     }
 }
 

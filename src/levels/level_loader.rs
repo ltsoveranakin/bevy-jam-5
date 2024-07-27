@@ -6,8 +6,8 @@ use bevy::prelude::*;
 use bevy::utils::HashSet;
 use thiserror::Error;
 
-use crate::levels::{level_data_ready, LoadLevelEvent};
 use crate::levels::data::{LevelData, LocationData};
+use crate::levels::LoadLevelEvent;
 
 pub struct LevelLoaderPlugin;
 
@@ -17,7 +17,7 @@ impl Plugin for LevelLoaderPlugin {
             .init_resource::<LevelDataHandleRes>()
             .init_asset_loader::<LevelJSONAssetLoader>()
             .init_asset::<LevelData>()
-            .add_systems(Update, (load_level, set_loaded_level, level_data_ready));
+            .add_systems(Update, (load_level, set_loaded_level));
     }
 }
 

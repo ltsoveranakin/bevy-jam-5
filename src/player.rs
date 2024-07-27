@@ -7,13 +7,15 @@ use crate::math::tile_pos_to_world_pos;
 
 const PLAYER_SPEED: f32 = 60.;
 const JUMP_POWER: f32 = 300.;
-const MID_AIR_SPEED_DEGREDATION: f32 = 60.;
+const MID_AIR_SPEED_DEGREDATION: f32 = 100.;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerDeathEvent>()
+            .add_event::<PlayerFinishLevelEvent>()
+            .add_event::<RespawnPlayerEvent>()
             .add_systems(Startup, spawn_player)
             .add_systems(
                 Update,
@@ -21,6 +23,8 @@ impl Plugin for PlayerPlugin {
                     check_player_on_ground,
                     move_player.after(check_player_on_ground),
                     check_player_out_of_bounds,
+                    respawn_player_finish_level.after(check_player_out_of_bounds),
+                    respawn_player.after(respawn_player_finish_level),
                     respawn_player_death,
                 ),
             );
@@ -125,29 +129,55 @@ fn check_player_on_ground(
 #[derive(Event, Default)]
 pub struct PlayerDeathEvent;
 
+#[derive(Event, Default)]
+pub struct PlayerFinishLevelEvent;
+
 fn check_player_out_of_bounds(
     player_query: Query<&Transform, With<Player>>,
-    mut player_death_ev: EventWriter<PlayerDeathEvent>,
+    mut player_death: EventWriter<PlayerDeathEvent>,
+    mut player_finish_level: EventWriter<PlayerFinishLevelEvent>,
 ) {
     let transform = player_query.single();
 
     if transform.translation.y < -20. {
-        player_death_ev.send_default();
+        player_death.send_default();
     }
 
     if transform.translation.x > 320. {
+        player_finish_level.send_default();
         println!("fin level");
     }
 }
 
 fn respawn_player_death(
+    mut player_death_ev: EventReader<PlayerDeathEvent>,
+    mut respawn_player: EventWriter<RespawnPlayerEvent>,
+) {
+    if player_death_ev.read().next().is_some() {
+        respawn_player.send_default();
+    }
+}
+
+fn respawn_player_finish_level(
+    mut player_finish_level_event: EventReader<PlayerFinishLevelEvent>,
+    mut respawn_player: EventWriter<RespawnPlayerEvent>,
+) {
+    if player_finish_level_event.read().next().is_some() {
+        respawn_player.send_default();
+    }
+}
+
+#[derive(Event, Default)]
+pub struct RespawnPlayerEvent;
+
+fn respawn_player(
     mut player_query: Query<(&mut Transform, &mut Velocity), With<Player>>,
     level_data_handle: Res<LevelDataHandleRes>,
     level_data_assets: Res<Assets<LevelData>>,
-    mut player_death_ev: EventReader<PlayerDeathEvent>,
+    mut respawn_player_ev: EventReader<RespawnPlayerEvent>,
 ) {
     let (mut transform, mut velocity) = player_query.single_mut();
-    if player_death_ev.read().next().is_some() {
+    if respawn_player_ev.read().next().is_some() {
         if let Some(handle) = level_data_handle.0.clone() {
             let level_data = level_data_assets.get(handle.id()).unwrap();
             velocity.linvel = Vec2::ZERO;
