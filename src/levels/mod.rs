@@ -93,10 +93,7 @@ fn level_data_ready(
                     })
                     .id();
 
-                commands
-                    .entity(overlay_tile_map_entity)
-                    .add_child(overlay_tile_entity);
-                overlay_tile_storage.set(&tile_pos, tile_entity);
+                overlay_tile_storage.set(&tile_pos, overlay_tile_entity);
             }
 
             let collider_entity = commands

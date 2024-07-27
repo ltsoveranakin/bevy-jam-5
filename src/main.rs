@@ -1,3 +1,5 @@
+use std::env;
+
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy_ecs_tilemap::TilemapPlugin;
@@ -15,6 +17,8 @@ mod math;
 mod player;
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "full");
+
     App::new()
         .add_plugins((
             DefaultPlugins

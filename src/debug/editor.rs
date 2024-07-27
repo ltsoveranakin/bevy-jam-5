@@ -4,7 +4,7 @@ use std::io::Write;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::debug::{DebugState, DebugUpdateSet};
+use crate::debug::DebugUpdateSet;
 use crate::levels::{MainMap, OverlayMap};
 use crate::levels::data::{LevelData, LocationData, OverlayData, TileData, TileTypeData};
 use crate::math::world_pos_to_tile_pos;
@@ -14,7 +14,7 @@ pub struct DebugEditorPlugin;
 impl Plugin for DebugEditorPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<EditorState>()
-            .configure_sets(Update, EditorUpdateSet.run_if(in_state(DebugState::On)))
+            .configure_sets(Update, EditorUpdateSet.run_if(in_state(EditorState::On)))
             .init_resource::<CurrentEditorTile>()
             .init_resource::<MousePosition>()
             .add_systems(
@@ -63,8 +63,14 @@ fn toggle_editor_mode(
     if keys.just_pressed(KeyCode::KeyE) {
         if *editor_state == EditorState::Off {
             next_editor_state.set(EditorState::On);
+            println!("Editor ON");
+            println!("Press 'n' to switch to next tile");
+            println!("Press 'k' to save to file in current directory");
+            println!("Left click to set tile");
+            println!("Right click to delete tile in current scope (overlay vs. regular tile)")
         } else {
             next_editor_state.set(EditorState::Off);
+            println!("Editor OFF");
         }
     }
 }
@@ -154,6 +160,21 @@ fn editor_click_tile(
                 );
             }
         }
+    } else if mouse_button.just_pressed(MouseButton::Right) {
+        let tile_pos = world_pos_to_tile_pos(mouse_position.world_pos.extend(0.)).into();
+
+        match &*current_editor_tile {
+            CurrentEditorTile::Base(_) => {
+                let (_, mut main_map_storage) = main_map_query.single_mut();
+
+                clear_tile(commands.reborrow(), &mut main_map_storage, tile_pos);
+            }
+            CurrentEditorTile::Overlay(_) => {
+                let (_, mut overlay_map_storage) = overlay_map_query.single_mut();
+
+                clear_tile(commands.reborrow(), &mut overlay_map_storage, tile_pos);
+            }
+        }
     }
 }
 
@@ -182,7 +203,17 @@ fn set_tile_map_tile(
     }
 }
 
+fn clear_tile(mut commands: Commands, map_storage: &mut TileStorage, tile_pos: TilePos) {
+    if let Some(tile_entity) = map_storage.get(&tile_pos) {
+        if let Some(entity_commands) = commands.get_entity(tile_entity) {
+            entity_commands.despawn_recursive();
+            map_storage.remove(&tile_pos);
+        }
+    }
+}
+
 fn save_current_tile_map(
+    mut commands: Commands,
     main_map_query: Query<&TileStorage, With<MainMap>>,
     overlay_map_query: Query<&TileStorage, With<OverlayMap>>,
     tile_query: Query<(&TilePos, &TileTextureIndex)>,
@@ -219,9 +250,11 @@ fn save_current_tile_map(
         }
 
         let json_str = serde_json::to_string(&level_data).unwrap();
-        let mut file = File::create("level_out.out.json").unwrap();
+        let mut file = File::create("level.out.json").unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
+
+        println!("Wrote data to file at level.out.json")
     }
 }

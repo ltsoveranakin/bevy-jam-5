@@ -41,8 +41,11 @@ fn toggle_debug_state(
         if keys.just_pressed(KeyCode::Backquote) {
             if *debug_state == DebugState::Off {
                 next_debug_state.set(DebugState::On);
+                println!("Debug Mode ON");
+                println!("Press 'e' to toggle editor");
             } else {
                 next_debug_state.set(DebugState::Off);
+                println!("Debug Mode OFF");
             }
         }
     }
