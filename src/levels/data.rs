@@ -110,6 +110,13 @@ impl OverlayData {
             Self::Grass => 2,
         }
     }
+
+    pub fn from_texture_index(texture_index: u32) -> Self {
+        match texture_index {
+            2 => Self::Grass,
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug)]

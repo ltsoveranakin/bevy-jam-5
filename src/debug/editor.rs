@@ -183,12 +183,14 @@ fn set_tile_map_tile(
 }
 
 fn save_current_tile_map(
-    tile_map_query: Query<&TileStorage, With<MainMap>>,
+    main_map_query: Query<&TileStorage, With<MainMap>>,
+    overlay_map_query: Query<&TileStorage, With<OverlayMap>>,
     tile_query: Query<(&TilePos, &TileTextureIndex)>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
     if keys.just_pressed(KeyCode::KeyK) {
-        let tile_storage = tile_map_query.single();
+        let tile_storage = main_map_query.single();
+        let overlay_map_storage = overlay_map_query.single();
 
         let mut level_data = LevelData {
             spawn_location: LocationData { x: 0, y: 0 },
@@ -198,13 +200,21 @@ fn save_current_tile_map(
         for tile_entity in tile_storage.iter().flatten() {
             let (tile_pos, texture_index) = tile_query.get(*tile_entity).unwrap();
 
+            let over = if let Some(overlay_entity) = overlay_map_storage.get(tile_pos) {
+                let (_, texture_index) = tile_query.get(overlay_entity).unwrap();
+
+                Some(OverlayData::from_texture_index(texture_index.0))
+            } else {
+                None
+            };
+
             level_data.tiles.push(TileData {
                 tile_type: TileTypeData::from_texture_index(texture_index.0),
                 off: LocationData {
                     x: tile_pos.x,
                     y: tile_pos.y,
                 },
-                over: None,
+                over,
             });
         }
 
