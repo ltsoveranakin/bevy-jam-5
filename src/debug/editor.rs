@@ -209,7 +209,7 @@ fn save_current_tile_map(
         }
 
         let json_str = serde_json::to_string(&level_data).unwrap();
-        let mut file = File::create("level_out.lvl").unwrap();
+        let mut file = File::create("level_out.out.json").unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
