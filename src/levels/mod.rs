@@ -12,7 +12,13 @@ pub mod data;
 pub mod level_loader;
 
 pub const TILE_MAP_SIZE: u32 = 32;
+pub const TILE_MAP_SIZE_F32: f32 = TILE_MAP_SIZE as f32;
 pub const TILE_SIZE: f32 = 16.;
+pub const HALF_TILE_SIZE: f32 = 8.;
+
+pub const TILE_MAP_SIZE_STRUCT: TilemapSize = TilemapSize::new(TILE_MAP_SIZE, TILE_MAP_SIZE);
+pub const TILE_MAP_GRID_SIZE: TilemapGridSize =
+    TilemapGridSize::new(TILE_MAP_SIZE_F32, TILE_MAP_SIZE_F32);
 
 pub struct LevelPlugin;
 
@@ -23,6 +29,12 @@ impl Plugin for LevelPlugin {
             .add_systems(Startup, setup);
     }
 }
+
+#[derive(Component)]
+pub struct MainMap;
+
+#[derive(Component)]
+pub struct OverlayMap;
 
 #[derive(Event)]
 pub struct LoadLevelEvent(i32);
@@ -44,14 +56,11 @@ fn level_data_ready(
         let mut player_transform = player_query.single_mut();
 
         let level_data = level_data_assets.get(level_data.0).unwrap();
-        for tilemap_entity in tilemap_query.iter() {
-            commands.entity(tilemap_entity).despawn_recursive();
+        for tile_map_entity in tilemap_query.iter() {
+            commands.entity(tile_map_entity).despawn_recursive();
         }
 
-        let tile_map_size = TilemapSize {
-            x: TILE_MAP_SIZE,
-            y: TILE_MAP_SIZE,
-        };
+        let tile_map_size = TILE_MAP_SIZE_STRUCT;
 
         let tile_set_handle: Handle<Image> = asset_server.load("image/tile/tile_set.png");
         let mut tile_storage = TileStorage::empty(tile_map_size);
@@ -132,19 +141,20 @@ fn level_data_ready(
         let tile_size = TilemapTileSize::new(TILE_SIZE, TILE_SIZE);
         let grid_size = tile_size.into();
 
-        commands.entity(tile_map_entity).insert(TilemapBundle {
-            grid_size,
-            size: tile_map_size,
-            storage: tile_storage,
-            tile_size,
-            texture: TilemapTexture::Single(tile_set_handle.clone()),
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        });
+        commands.entity(tile_map_entity).insert((
+            TilemapBundle {
+                grid_size,
+                size: tile_map_size,
+                storage: tile_storage,
+                tile_size,
+                texture: TilemapTexture::Single(tile_set_handle.clone()),
+                ..default()
+            },
+            MainMap,
+        ));
 
-        commands
-            .entity(overlay_tile_map_entity)
-            .insert(TilemapBundle {
+        commands.entity(overlay_tile_map_entity).insert((
+            TilemapBundle {
                 grid_size,
                 size: tile_map_size,
                 storage: overlay_tile_storage,
@@ -152,7 +162,9 @@ fn level_data_ready(
                 texture: TilemapTexture::Single(tile_set_handle),
                 transform: Transform::from_xyz(0., 0., 1.),
                 ..default()
-            });
+            },
+            OverlayMap,
+        ));
 
         player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
     }

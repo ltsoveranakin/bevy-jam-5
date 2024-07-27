@@ -1,12 +1,17 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use crate::debug::editor::DebugEditorPlugin;
+
+mod editor;
+
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(Update, DebugUpdateSet.run_if(in_state(DebugState::On)))
+        app.add_plugins(DebugEditorPlugin)
             .init_state::<DebugState>()
+            .configure_sets(Update, DebugUpdateSet.run_if(in_state(DebugState::On)))
             .add_systems(Update, toggle_debug_state)
             .add_systems(OnEnter(DebugState::On), enable_debug_state)
             .add_systems(OnEnter(DebugState::Off), disable_debug_state);
