@@ -62,19 +62,21 @@ impl MeltStage {
         }
     }
 
-    pub fn get_collider_dimensions(&self) -> (f32, f32) {
+    pub fn get_collider_dimensions(&self) -> Vec2 {
         match self {
-            MeltStage::None => (4.5, 6.),
-            MeltStage::Partial => (3., 6.),
-            MeltStage::Half => (1.5, 6.),
-            MeltStage::Mostly => (0.5, 6.),
+            MeltStage::None => Vec2::new(4.5, 6.),
+            MeltStage::Partial => Vec2::new(3., 6.),
+            MeltStage::Half => Vec2::new(1.5, 6.),
+            MeltStage::Mostly => Vec2::new(0.5, 6.),
         }
     }
 
-    pub fn get_cast_collider_dimensions(&self) -> (f32, f32) {
-        let mut dimenstions = self.get_collider_dimensions();
-        dimenstions.0 *= CAST_COLLIDER_SCALE;
-        dimenstions
+    pub fn compute_cast_collider_dimensions(dimensions: Vec2) -> Vec2 {
+        dimensions * CAST_COLLIDER_SCALE
+    }
+
+    pub fn get_cast_collider_dimensions(&self) -> Vec2 {
+        Self::compute_cast_collider_dimensions(self.get_collider_dimensions())
     }
 }
 
@@ -88,22 +90,26 @@ fn update_set_melt_stage(
     let mut sprite = player_sprite_query.single_mut();
 
     if let Some(set_melt_stage) = set_melt_stage_event.read().next() {
+        let collider_dimensions = set_melt_stage.0.get_collider_dimensions();
+        let cast_collider_dimensions =
+            MeltStage::compute_cast_collider_dimensions(collider_dimensions);
+
         sprite.rect = Some(Rect::from_center_half_size(
             set_melt_stage.0.get_tile_sprite_offset(),
             Vec2::splat(16.),
         ));
 
-        let cast_collider_dimensions = set_melt_stage.0.get_cast_collider_dimensions();
-
         commands
             .entity(entity)
             .remove::<Collider>()
             .insert(Collider::capsule_y(
-                cast_collider_dimensions.0,
-                cast_collider_dimensions.1,
+                collider_dimensions.x,
+                collider_dimensions.y,
             ));
 
         player.melt_stage = set_melt_stage.0;
+        player.cast_collider =
+            Collider::capsule_y(cast_collider_dimensions.x, cast_collider_dimensions.y);
     }
 }
 

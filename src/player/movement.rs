@@ -101,6 +101,11 @@ fn fix_wall_velocity(
         } else {
             player.on_wall = shape_hit.time_of_impact <= MAX_TOI_ON_WALL;
         }
+
+        println!(
+            "wall: {} - toi: {}",
+            player.on_wall, shape_hit.time_of_impact
+        );
     } else {
         player.on_wall = false;
     }

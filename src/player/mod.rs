@@ -41,7 +41,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let player = Player {
         on_ground: false,
         on_wall: false,
-        cast_collider: Collider::capsule_y(cast_collider_dimensions.0, cast_collider_dimensions.1),
+        cast_collider: Collider::capsule_y(cast_collider_dimensions.x, cast_collider_dimensions.y),
         melt_stage,
         x_acceleration: 0.,
         x_velocity: 0.,
@@ -51,7 +51,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             player,
             InheritedVisibility::default(),
-            Collider::capsule_y(collider_dimensions.0, collider_dimensions.1),
+            Collider::capsule_y(collider_dimensions.x, collider_dimensions.y),
             RigidBody::Dynamic,
             Velocity::default(),
             KinematicCharacterController::default(),
