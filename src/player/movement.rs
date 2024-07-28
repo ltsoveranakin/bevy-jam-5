@@ -84,7 +84,7 @@ fn fix_wall_velocity(
     } else {
         Vec2::NEG_X
     };
-    let collider_shape = &player.collider;
+    let collider_shape = &player.cast_collider;
     let cast_options = ShapeCastOptions::with_max_time_of_impact(32.);
     let query_filter = QueryFilter::default().exclude_collider(entity);
 
@@ -121,7 +121,7 @@ fn check_player_on_ground(
     let cast_start = transform.translation.truncate();
     let shape_rotation = 0.;
     let cast_direction = Vec2::NEG_Y;
-    let collider_shape = &player.collider;
+    let collider_shape = &player.cast_collider;
     let cast_options = ShapeCastOptions::with_max_time_of_impact(32.);
     let query_filter = QueryFilter::default().exclude_collider(entity);
 

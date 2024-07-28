@@ -7,7 +7,7 @@ use crate::levels::level_loader::LevelDataHandleRes;
 use crate::levels::LoadNextLevelEvent;
 use crate::math::tile_pos_to_world_pos;
 use crate::player::{Player, PlayerSprite};
-use crate::player::melting::{MeltStage, TimeUnderSun};
+use crate::player::melting::{MeltStage, SetMeltStageEvent, TimeUnderSun};
 
 pub struct RespawnPlugin;
 
@@ -62,29 +62,27 @@ fn check_player_out_of_bounds(
 }
 
 fn respawn_player_death(
-    mut player_query: Query<&mut Player>,
     mut player_death_ev: EventReader<PlayerDeathEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
+    mut set_melt_stage: EventWriter<SetMeltStageEvent>,
 ) {
-    let mut player = player_query.single_mut();
     if player_death_ev.read().next().is_some() {
         println!("death");
         respawn_player.send_default();
         set_day_night.send(SetDayNightEvent(DayNightState::Day));
-        player.melt_stage = MeltStage::None;
+        set_melt_stage.send(SetMeltStageEvent(MeltStage::None));
     }
 }
 
 fn respawn_player_finish_level(
-    mut player_query: Query<&mut Player>,
     mut player_finish_level_event: EventReader<PlayerFinishLevelEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
     mut load_next_level: EventWriter<LoadNextLevelEvent>,
+    mut set_melt_stage: EventWriter<SetMeltStageEvent>,
     day_night_state: Res<State<DayNightState>>,
 ) {
-    let mut player = player_query.single_mut();
     if player_finish_level_event.read().next().is_some() {
         respawn_player.send_default();
         println!("level fin");
@@ -98,7 +96,7 @@ fn respawn_player_finish_level(
                 println!("moving to next level");
                 // next level
                 set_day_night.send(SetDayNightEvent(DayNightState::Day));
-                player.melt_stage = MeltStage::None;
+                set_melt_stage.send(SetMeltStageEvent(MeltStage::None));
                 load_next_level.send_default();
             }
         }
@@ -125,7 +123,7 @@ fn respawn_player(
                 tile_pos_to_world_pos(level_data.spawn_location.into(), transform.translation.z);
             time_under_sun.reset();
             sprite.rect = Some(Rect::from_center_half_size(
-                player.melt_stage.get_sprite_offset(),
+                player.melt_stage.get_tile_sprite_offset(),
                 Vec2::splat(16.),
             ));
         }

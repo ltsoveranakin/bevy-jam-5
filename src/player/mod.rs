@@ -9,6 +9,8 @@ mod melting;
 mod movement;
 pub mod respawn;
 
+const CAST_COLLIDER_SCALE: f32 = 0.9;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -22,7 +24,7 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     on_ground: bool,
     on_wall: bool,
-    collider: Collider,
+    cast_collider: Collider,
     melt_stage: MeltStage,
     x_acceleration: f32,
     x_velocity: f32,
@@ -32,18 +34,24 @@ pub struct Player {
 pub struct PlayerSprite;
 
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let melt_stage = MeltStage::None;
+    let collider_dimensions = melt_stage.get_collider_dimensions();
+    let cast_collider_dimensions = melt_stage.get_cast_collider_dimensions();
+
+    let player = Player {
+        on_ground: false,
+        on_wall: false,
+        cast_collider: Collider::capsule_y(cast_collider_dimensions.0, cast_collider_dimensions.1),
+        melt_stage,
+        x_acceleration: 0.,
+        x_velocity: 0.,
+    };
+
     commands
         .spawn((
-            Player {
-                on_ground: false,
-                on_wall: false,
-                collider: Collider::capsule_y(4., 5.5),
-                melt_stage: MeltStage::None,
-                x_acceleration: 0.,
-                x_velocity: 0.,
-            },
+            player,
             InheritedVisibility::default(),
-            Collider::capsule_y(4.5, 6.),
+            Collider::capsule_y(collider_dimensions.0, collider_dimensions.1),
             RigidBody::Dynamic,
             Velocity::default(),
             KinematicCharacterController::default(),
@@ -61,7 +69,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                     transform: Transform::from_xyz(0., 4., 2.),
                     sprite: Sprite {
                         rect: Some(Rect::from_center_half_size(
-                            MeltStage::None.get_sprite_offset(),
+                            MeltStage::None.get_tile_sprite_offset(),
                             Vec2::splat(16.),
                         )),
                         ..default()

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::day_night::DayCycleSet;
-use crate::player::{Player, PlayerSprite};
+use crate::player::{CAST_COLLIDER_SCALE, Player, PlayerSprite};
 
 const MELT_INTERVAL: f32 = 3.;
 
@@ -10,15 +10,23 @@ pub struct MeltingPlugin;
 
 impl Plugin for MeltingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<TimeUnderSun>().add_systems(
-            Update,
-            (increase_time_under_sun, increase_melt_stage).in_set(DayCycleSet),
-        );
+        app.init_resource::<TimeUnderSun>()
+            .add_event::<SetMeltStageEvent>()
+            .add_systems(
+                Update,
+                (
+                    (increase_time_under_sun, increase_melt_stage).in_set(DayCycleSet),
+                    update_set_melt_stage,
+                ),
+            );
     }
 }
 
 #[derive(Resource, Default)]
 pub struct TimeUnderSun(pub f32);
+
+#[derive(Event)]
+pub struct SetMeltStageEvent(pub MeltStage);
 
 impl TimeUnderSun {
     pub fn reset(&mut self) {
@@ -26,7 +34,9 @@ impl TimeUnderSun {
     }
 }
 
+#[derive(Default, Copy, Clone)]
 pub enum MeltStage {
+    #[default]
     None,
     Partial,
     Half,
@@ -37,19 +47,63 @@ impl MeltStage {
     pub fn get_speed_multiplier(&self) -> f32 {
         match self {
             MeltStage::None => 1.,
-            MeltStage::Partial => 0.75,
-            MeltStage::Half => 0.6,
-            MeltStage::Mostly => 0.33,
+            MeltStage::Partial => 0.8,
+            MeltStage::Half => 0.7,
+            MeltStage::Mostly => 0.6,
         }
     }
 
-    pub fn get_sprite_offset(&self) -> Vec2 {
+    pub fn get_tile_sprite_offset(&self) -> Vec2 {
         match self {
             MeltStage::None => Vec2::splat(16.),
             MeltStage::Partial => Vec2::new(48., 16.),
             MeltStage::Half => Vec2::new(16., 48.),
             MeltStage::Mostly => Vec2::splat(48.),
         }
+    }
+
+    pub fn get_collider_dimensions(&self) -> (f32, f32) {
+        match self {
+            MeltStage::None => (4.5, 6.),
+            MeltStage::Partial => (3., 6.),
+            MeltStage::Half => (1.5, 6.),
+            MeltStage::Mostly => (0.5, 6.),
+        }
+    }
+
+    pub fn get_cast_collider_dimensions(&self) -> (f32, f32) {
+        let mut dimenstions = self.get_collider_dimensions();
+        dimenstions.0 *= CAST_COLLIDER_SCALE;
+        dimenstions
+    }
+}
+
+fn update_set_melt_stage(
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &mut Player)>,
+    mut player_sprite_query: Query<&mut Sprite, With<PlayerSprite>>,
+    mut set_melt_stage_event: EventReader<SetMeltStageEvent>,
+) {
+    let (entity, mut player) = player_query.single_mut();
+    let mut sprite = player_sprite_query.single_mut();
+
+    if let Some(set_melt_stage) = set_melt_stage_event.read().next() {
+        sprite.rect = Some(Rect::from_center_half_size(
+            set_melt_stage.0.get_tile_sprite_offset(),
+            Vec2::splat(16.),
+        ));
+
+        let cast_collider_dimensions = set_melt_stage.0.get_cast_collider_dimensions();
+
+        commands
+            .entity(entity)
+            .remove::<Collider>()
+            .insert(Collider::capsule_y(
+                cast_collider_dimensions.0,
+                cast_collider_dimensions.1,
+            ));
+
+        player.melt_stage = set_melt_stage.0;
     }
 }
 
@@ -80,12 +134,11 @@ fn increase_time_under_sun(
 }
 
 fn increase_melt_stage(
-    mut player_query: Query<&mut Player>,
+    mut player_query: Query<&Player>,
     mut time_under_sun: ResMut<TimeUnderSun>,
-    mut player_sprite_query: Query<&mut Sprite, With<PlayerSprite>>,
+    mut set_melt: EventWriter<SetMeltStageEvent>,
 ) {
-    let mut player = player_query.single_mut();
-    let mut sprite = player_sprite_query.single_mut();
+    let player = player_query.single_mut();
 
     if time_under_sun.0 >= MELT_INTERVAL {
         time_under_sun.reset();
@@ -97,11 +150,6 @@ fn increase_melt_stage(
             MeltStage::Mostly => MeltStage::Mostly,
         };
 
-        sprite.rect = Some(Rect::from_center_half_size(
-            next_melt_stage.get_sprite_offset(),
-            Vec2::splat(16.),
-        ));
-
-        player.melt_stage = next_melt_stage;
+        set_melt.send(SetMeltStageEvent(next_melt_stage));
     }
 }
