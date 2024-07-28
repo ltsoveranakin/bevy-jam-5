@@ -4,6 +4,7 @@ use bevy_rapier2d::prelude::*;
 use crate::day_night::{DayNightState, SetDayNightEvent};
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::LevelDataHandleRes;
+use crate::levels::LoadNextLevelEvent;
 use crate::math::tile_pos_to_world_pos;
 use crate::player::melting::{MeltingPlugin, MeltStage, TimeUnderSun};
 
@@ -196,6 +197,7 @@ fn respawn_player_finish_level(
     mut player_finish_level_event: EventReader<PlayerFinishLevelEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
+    mut load_next_level: EventWriter<LoadNextLevelEvent>,
     day_night_state: Res<State<DayNightState>>,
 ) {
     let mut player = player_query.single_mut();
@@ -211,6 +213,7 @@ fn respawn_player_finish_level(
                 // next level
                 set_day_night.send(SetDayNightEvent(DayNightState::Day));
                 player.melt_stage = MeltStage::None;
+                load_next_level.send_default();
             }
         }
     }

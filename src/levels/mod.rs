@@ -24,8 +24,17 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelLoaderPlugin)
             .add_event::<LoadLevelEvent>()
+            .add_event::<LoadNextLevelEvent>()
+            .init_resource::<CurrentLevel>()
             .add_systems(Startup, setup)
-            .add_systems(Update, level_data_ready);
+            .add_systems(
+                Update,
+                (
+                    level_data_ready,
+                    receive_load_level,
+                    receive_load_next_level,
+                ),
+            );
     }
 }
 
@@ -36,7 +45,13 @@ pub struct MainMap;
 pub struct OverlayMap;
 
 #[derive(Event)]
-pub struct LoadLevelEvent(i32);
+pub struct LoadLevelEvent(u32);
+
+#[derive(Event, Default)]
+pub struct LoadNextLevelEvent;
+
+#[derive(Resource, Default)]
+pub struct CurrentLevel(pub u32);
 
 fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
     load_level_event.send(LoadLevelEvent(0));
@@ -162,5 +177,24 @@ fn level_data_ready(
 
         respawn_player.send_default();
         // player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
+    }
+}
+
+fn receive_load_level(
+    mut load_level_event: EventReader<LoadLevelEvent>,
+    mut current_level: ResMut<CurrentLevel>,
+) {
+    if let Some(load_level) = load_level_event.read().next() {
+        current_level.0 = load_level.0;
+    }
+}
+
+fn receive_load_next_level(
+    current_level: Res<CurrentLevel>,
+    mut load_next_level_event: EventReader<LoadNextLevelEvent>,
+    mut load_level_event: EventWriter<LoadLevelEvent>,
+) {
+    if load_next_level_event.read().next().is_some() {
+        load_level_event.send(LoadLevelEvent(current_level.0 + 1));
     }
 }
