@@ -38,8 +38,8 @@ impl MeltStage {
         match self {
             MeltStage::None => 1.,
             MeltStage::Partial => 0.75,
-            MeltStage::Half => 0.5,
-            MeltStage::Mostly => 0.25,
+            MeltStage::Half => 0.6,
+            MeltStage::Mostly => 0.33,
         }
     }
 

@@ -9,7 +9,7 @@ const PLAYER_MAX_VELOCITY: f32 = 80.;
 const ACCELERATION: f32 = 320.;
 const JUMP_POWER: f32 = 300.;
 const MAX_TOI_GROUNDED: f32 = 1.1;
-const MAX_TOI_ON_WALL: f32 = 1.;
+const MAX_TOI_ON_WALL: f32 = 2.5;
 
 pub struct MovementPlugin;
 
@@ -59,9 +59,9 @@ fn apply_acceleration(mut player_query: Query<(&mut Player, &mut Velocity)>, tim
     if player.x_acceleration != 0. {
         player.x_velocity += player.x_acceleration * time.delta_seconds();
 
-        player.x_velocity = player
-            .x_velocity
-            .clamp(-PLAYER_MAX_VELOCITY, PLAYER_MAX_VELOCITY);
+        let max_velocity = PLAYER_MAX_VELOCITY * player.melt_stage.get_speed_multiplier();
+
+        player.x_velocity = player.x_velocity.clamp(-max_velocity, max_velocity);
 
         velocity.linvel.x = player.x_velocity;
     } else {
