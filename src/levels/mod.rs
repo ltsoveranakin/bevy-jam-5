@@ -6,7 +6,7 @@ use crate::debug::{DebugState, DebugVisibility};
 use crate::levels::data::LevelData;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
-use crate::player::RespawnPlayerEvent;
+use crate::player::respawn::RespawnPlayerEvent;
 
 pub mod data;
 pub mod level_loader;
