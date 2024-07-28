@@ -50,6 +50,9 @@ pub struct Player {
     melt_stage: MeltStage,
 }
 
+#[derive(Component)]
+pub struct PlayerSprite;
+
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn((
@@ -71,11 +74,21 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             Restitution::default(),
         ))
         .with_children(|parent| {
-            parent.spawn(SpriteBundle {
-                texture: asset_server.load("image/character/snowman.png"),
-                transform: Transform::from_xyz(0., 6., 2.),
-                ..default()
-            });
+            parent.spawn((
+                SpriteBundle {
+                    texture: asset_server.load("image/character/snowman.png"),
+                    transform: Transform::from_xyz(0., 6., 2.),
+                    sprite: Sprite {
+                        rect: Some(Rect::from_center_half_size(
+                            MeltStage::None.get_sprite_offset(),
+                            Vec2::splat(16.),
+                        )),
+                        ..default()
+                    },
+                    ..default()
+                },
+                PlayerSprite,
+            ));
         });
 }
 

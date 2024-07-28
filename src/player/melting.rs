@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::day_night::DayCycleSet;
-use crate::player::Player;
+use crate::player::{Player, PlayerSprite};
 
 const MELT_INTERVAL: f32 = 3.;
 
@@ -31,7 +31,6 @@ pub enum MeltStage {
     Partial,
     Half,
     Mostly,
-    Completely,
 }
 
 impl MeltStage {
@@ -41,7 +40,15 @@ impl MeltStage {
             MeltStage::Partial => 0.75,
             MeltStage::Half => 0.5,
             MeltStage::Mostly => 0.25,
-            MeltStage::Completely => 0.,
+        }
+    }
+
+    pub fn get_sprite_offset(&self) -> Vec2 {
+        match self {
+            MeltStage::None => Vec2::splat(16.),
+            MeltStage::Partial => Vec2::new(48., 16.),
+            MeltStage::Half => Vec2::new(16., 48.),
+            MeltStage::Mostly => Vec2::splat(48.),
         }
     }
 }
@@ -75,8 +82,10 @@ fn increase_time_under_sun(
 fn increase_melt_stage(
     mut player_query: Query<&mut Player>,
     mut time_under_sun: ResMut<TimeUnderSun>,
+    mut player_sprite_query: Query<&mut Sprite, With<PlayerSprite>>,
 ) {
     let mut player = player_query.single_mut();
+    let mut sprite = player_sprite_query.single_mut();
 
     if time_under_sun.0 >= MELT_INTERVAL {
         time_under_sun.reset();
@@ -85,9 +94,13 @@ fn increase_melt_stage(
             MeltStage::None => MeltStage::Partial,
             MeltStage::Partial => MeltStage::Half,
             MeltStage::Half => MeltStage::Mostly,
-            MeltStage::Mostly => MeltStage::Completely,
-            MeltStage::Completely => MeltStage::Completely,
+            MeltStage::Mostly => MeltStage::Mostly,
         };
+
+        sprite.rect = Some(Rect::from_center_half_size(
+            next_melt_stage.get_sprite_offset(),
+            Vec2::splat(16.),
+        ));
 
         player.melt_stage = next_melt_stage;
     }
