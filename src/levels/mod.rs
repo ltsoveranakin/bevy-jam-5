@@ -196,6 +196,9 @@ fn receive_load_next_level(
     mut load_level_event: EventWriter<LoadLevelEvent>,
 ) {
     if load_next_level_event.read().next().is_some() {
-        load_level_event.send(LoadLevelEvent(current_level.0 + 1));
+        if current_level.0 < MAX_LEVEL_INDEX {
+            load_level_event.send(LoadLevelEvent(current_level.0 + 1));
+        } else {
+        }
     }
 }

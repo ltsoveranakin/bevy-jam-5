@@ -257,7 +257,7 @@ fn save_current_tile_map(
         let mut hasher = AHasher::default();
 
         level_data.hash(&mut hasher);
-        let hash_value = hasher.finish() as i16;
+        let hash_value = hasher.finish() as u16;
 
         let mut file = File::create(format!("level-hash-{}.out.json", hash_value)).unwrap();
 
