@@ -23,6 +23,8 @@ pub struct Player {
     on_ground: bool,
     collider: Collider,
     melt_stage: MeltStage,
+    x_acceleration: f32,
+    x_velocity: f32,
 }
 
 #[derive(Component)]
@@ -35,6 +37,8 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
                 on_ground: false,
                 collider: Collider::capsule_y(2.5, 5.5),
                 melt_stage: MeltStage::None,
+                x_acceleration: 0.,
+                x_velocity: 0.,
             },
             InheritedVisibility::default(),
             Collider::capsule_y(3., 6.),
