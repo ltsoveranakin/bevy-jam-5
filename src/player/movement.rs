@@ -11,6 +11,7 @@ const PLAYER_MAX_VELOCITY: f32 = 80.;
 /// The acceleration of the player, the player will accelerate to [`PLAYER_MAX_VELOCITY`] in [`PLAYER_MAX_VELOCITY`]/[`ACCELERATION`] seconds
 const ACCELERATION: f32 = 320.;
 const JUMP_POWER: f32 = 300.;
+const MAX_TOI_GROUNDED: f32 = 1.1;
 
 pub struct MovementPlugin;
 
@@ -77,7 +78,7 @@ fn check_player_on_ground(
 
     // shape cast to check if on ground
 
-    let cast_start = transform.translation.truncate() - Vec2::new(0., 1.);
+    let cast_start = transform.translation.truncate();
     let shape_rotation = 0.;
     let cast_direction = Vec2::NEG_Y;
     let collider_shape = &player.collider;
@@ -93,7 +94,10 @@ fn check_player_on_ground(
         cast_options,
         query_filter,
     ) {
-        println!("toi: {}", shape_hit.time_of_impact);
-        player.on_ground = shape_hit.time_of_impact == 0.;
+        player.on_ground = shape_hit.time_of_impact <= MAX_TOI_GROUNDED;
+        println!(
+            "toi: {} grounded: {}",
+            shape_hit.time_of_impact, player.on_ground
+        );
     }
 }
