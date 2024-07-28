@@ -206,10 +206,12 @@ fn respawn_player_finish_level(
         println!("level fin");
         match day_night_state.get() {
             DayNightState::Day => {
+                println!("replaying at night");
                 // replay same level, but at night
                 set_day_night.send(SetDayNightEvent(DayNightState::Night));
             }
             DayNightState::Night => {
+                println!("moving to next level");
                 // next level
                 set_day_night.send(SetDayNightEvent(DayNightState::Day));
                 player.melt_stage = MeltStage::None;
@@ -223,20 +225,28 @@ fn respawn_player_finish_level(
 pub struct RespawnPlayerEvent;
 
 fn respawn_player(
-    mut player_query: Query<(&mut Transform, &mut Velocity)>,
+    mut player_query: Query<(&mut Transform, &mut Velocity, &Player)>,
+    mut player_sprite_query: Query<&mut Sprite, With<PlayerSprite>>,
     level_data_handle: Res<LevelDataHandleRes>,
     level_data_assets: Res<Assets<LevelData>>,
     mut respawn_player_ev: EventReader<RespawnPlayerEvent>,
     mut time_under_sun: ResMut<TimeUnderSun>,
 ) {
-    let (mut transform, mut velocity) = player_query.single_mut();
+    let (mut transform, mut velocity, player) = player_query.single_mut();
+    let mut sprite = player_sprite_query.single_mut();
+
     if respawn_player_ev.read().next().is_some() {
         if let Some(handle) = level_data_handle.0.clone() {
             let level_data = level_data_assets.get(handle.id()).unwrap();
+
             velocity.linvel = Vec2::ZERO;
             transform.translation =
                 tile_pos_to_world_pos(level_data.spawn_location.into(), transform.translation.z);
             time_under_sun.reset();
+            sprite.rect = Some(Rect::from_center_half_size(
+                player.melt_stage.get_sprite_offset(),
+                Vec2::splat(16.),
+            ));
         }
     }
 }

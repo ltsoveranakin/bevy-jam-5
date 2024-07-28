@@ -185,6 +185,7 @@ fn receive_load_level(
     mut current_level: ResMut<CurrentLevel>,
 ) {
     if let Some(load_level) = load_level_event.read().next() {
+        println!("Loading level: {}", load_level.0);
         current_level.0 = load_level.0;
     }
 }
