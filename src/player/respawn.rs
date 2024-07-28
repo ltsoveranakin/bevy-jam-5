@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier2d::dynamics::Velocity;
+use bevy_rapier2d::prelude::*;
 
 use crate::day_night::{DayNightState, SetDayNightEvent};
 use crate::levels::data::LevelData;

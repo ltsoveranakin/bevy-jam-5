@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier2d::dynamics::Velocity;
-use bevy_rapier2d::geometry::ShapeCastOptions;
-use bevy_rapier2d::pipeline::QueryFilter;
-use bevy_rapier2d::plugin::RapierContext;
+use bevy_rapier2d::prelude::*;
 
 use crate::player::Player;
 
@@ -12,6 +9,7 @@ const PLAYER_MAX_VELOCITY: f32 = 80.;
 const ACCELERATION: f32 = 320.;
 const JUMP_POWER: f32 = 300.;
 const MAX_TOI_GROUNDED: f32 = 1.1;
+const MAX_TOI_ON_WALL: f32 = 1.;
 
 pub struct MovementPlugin;
 
@@ -22,7 +20,8 @@ impl Plugin for MovementPlugin {
             (
                 check_player_on_ground,
                 (player_move, player_jump).in_set(ControlPlayerSet),
-                apply_acceleration.after(ControlPlayerSet),
+                fix_wall_velocity.after(ControlPlayerSet),
+                apply_acceleration.after(fix_wall_velocity),
             ),
         );
     }
@@ -70,6 +69,47 @@ fn apply_acceleration(mut player_query: Query<(&mut Player, &mut Velocity)>, tim
     }
 }
 
+fn fix_wall_velocity(
+    mut player_query: Query<(Entity, &mut Player, &Transform)>,
+    rapier_context: Res<RapierContext>,
+) {
+    let (entity, mut player, transform) = player_query.single_mut();
+
+    // shape cast to check if against wall
+
+    let cast_start = transform.translation.truncate();
+    let shape_rotation = 0.;
+    let cast_direction = if player.x_acceleration > 0. {
+        Vec2::X
+    } else {
+        Vec2::NEG_X
+    };
+    let collider_shape = &player.collider;
+    let cast_options = ShapeCastOptions::with_max_time_of_impact(32.);
+    let query_filter = QueryFilter::default().exclude_collider(entity);
+
+    if let Some((_entity, shape_hit)) = rapier_context.cast_shape(
+        cast_start,
+        shape_rotation,
+        cast_direction,
+        collider_shape,
+        cast_options,
+        query_filter,
+    ) {
+        if shape_hit.time_of_impact == 0. {
+            player.on_wall = false;
+        } else {
+            player.on_wall = shape_hit.time_of_impact <= MAX_TOI_ON_WALL;
+        }
+    } else {
+        player.on_wall = false;
+    }
+
+    if player.on_wall {
+        player.x_acceleration = 0.;
+    }
+}
+
 fn check_player_on_ground(
     mut player_query: Query<(Entity, &mut Player, &Transform)>,
     rapier_context: Res<RapierContext>,
@@ -83,7 +123,6 @@ fn check_player_on_ground(
     let cast_direction = Vec2::NEG_Y;
     let collider_shape = &player.collider;
     let cast_options = ShapeCastOptions::with_max_time_of_impact(32.);
-    // let cast_options = ShapeCastOptions::with_max_time_of_impact(1.);
     let query_filter = QueryFilter::default().exclude_collider(entity);
 
     if let Some((_entity, shape_hit)) = rapier_context.cast_shape(
@@ -95,9 +134,11 @@ fn check_player_on_ground(
         query_filter,
     ) {
         player.on_ground = shape_hit.time_of_impact <= MAX_TOI_GROUNDED;
-        println!(
-            "toi: {} grounded: {}",
-            shape_hit.time_of_impact, player.on_ground
-        );
+        // println!(
+        //     "toi: {} grounded: {}",
+        //     shape_hit.time_of_impact, player.on_ground
+        // );
+    } else {
+        player.on_ground = false;
     }
 }

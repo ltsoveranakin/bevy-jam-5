@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use bevy_rapier2d::prelude::Collider;
+use bevy_rapier2d::prelude::*;
 
 use crate::debug::{DebugState, DebugVisibility};
 use crate::levels::data::LevelData;
