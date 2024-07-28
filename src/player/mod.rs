@@ -59,7 +59,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             Player {
                 on_ground: false,
-                collider: Collider::capsule_y(3., 5.8),
+                collider: Collider::capsule_y(2.5, 5.5),
                 melt_stage: MeltStage::None,
             },
             InheritedVisibility::default(),
@@ -107,6 +107,7 @@ fn move_player(
     }
 
     if player.on_ground {
+        // println!("grounded - {}", time.elapsed_seconds());
         if keys.pressed(KeyCode::KeyA) {
             desired_x_velocity -= PLAYER_MAX_SPEED;
         }
@@ -135,11 +136,12 @@ fn check_player_on_ground(
 
     // shape cast to check if on ground
 
-    let cast_start = transform.translation.truncate() - Vec2::new(0., 0.2);
+    let cast_start = transform.translation.truncate() - Vec2::new(0., 1.);
     let shape_rotation = 0.;
     let cast_direction = Vec2::NEG_Y;
     let collider_shape = &player.collider;
-    let cast_options = default();
+    let cast_options = ShapeCastOptions::default();
+    // let cast_options = ShapeCastOptions::with_max_time_of_impact(1.);
     let query_filter = QueryFilter::default().exclude_collider(entity);
 
     if let Some((_entity, shape_hit)) = rapier_context.cast_shape(
@@ -150,6 +152,7 @@ fn check_player_on_ground(
         cast_options,
         query_filter,
     ) {
+        println!("toi: {}", shape_hit.time_of_impact);
         player.on_ground = shape_hit.time_of_impact == 0.;
     }
 }

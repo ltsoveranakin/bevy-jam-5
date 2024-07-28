@@ -259,11 +259,11 @@ fn save_current_tile_map(
         level_data.hash(&mut hasher);
         let hash_value = hasher.finish() as i16;
 
-        let mut file = File::create(format!("level-randid-{}.out.json", hash_value)).unwrap();
+        let mut file = File::create(format!("level-hash-{}.out.json", hash_value)).unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
 
-        println!("Wrote data to file at level-randid-{}.out.json", hash_value)
+        println!("Wrote data to file at level-hash-{}.out.json", hash_value)
     }
 }
