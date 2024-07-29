@@ -35,10 +35,10 @@ fn player_move(mut player_query: Query<&mut Player>, keys: Res<ButtonInput<KeyCo
 
     let mut desired_x_acceleration = 0.;
 
-    if keys.pressed(KeyCode::KeyA) {
+    if keys.pressed(KeyCode::KeyA) || keys.pressed(KeyCode::ArrowLeft) {
         desired_x_acceleration -= ACCELERATION;
     }
-    if keys.pressed(KeyCode::KeyD) {
+    if keys.pressed(KeyCode::KeyD) || keys.pressed(KeyCode::ArrowRight) {
         desired_x_acceleration += ACCELERATION;
     }
 
@@ -48,7 +48,11 @@ fn player_move(mut player_query: Query<&mut Player>, keys: Res<ButtonInput<KeyCo
 fn player_jump(mut player_query: Query<(&Player, &mut Velocity)>, keys: Res<ButtonInput<KeyCode>>) {
     let (player, mut velocity) = player_query.single_mut();
 
-    if player.on_ground && (keys.just_pressed(KeyCode::KeyW) || keys.just_pressed(KeyCode::Space)) {
+    if player.on_ground
+        && (keys.just_pressed(KeyCode::KeyW)
+            || keys.just_pressed(KeyCode::Space)
+            || keys.pressed(KeyCode::ArrowUp))
+    {
         velocity.linvel.y = JUMP_POWER;
     }
 }

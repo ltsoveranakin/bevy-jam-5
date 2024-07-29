@@ -3,6 +3,20 @@
 version = 3
 
 [[package]]
+name = "A-Snowmans-Cycle"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_ecs_tilemap",
+ "bevy_rapier2d",
+ "bevy_turborand",
+ "console_error_panic_hook",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "ab_glyph"
 version = "0.2.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -301,20 +315,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e938630e9f472b1899c78ef84aa907081b23bad8333140e2295c620485b6ee7"
 dependencies = [
  "bevy_internal",
-]
-
-[[package]]
-name = "bevy-jam-5"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_ecs_tilemap",
- "bevy_rapier2d",
- "bevy_turborand",
- "console_error_panic_hook",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
