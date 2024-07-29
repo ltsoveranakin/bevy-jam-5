@@ -1,4 +1,6 @@
-use std::env;
+extern crate console_error_panic_hook;
+
+use std::{env, panic};
 
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
@@ -17,9 +19,10 @@ mod debug;
 mod levels;
 mod math;
 mod player;
-mod z_indecies;
+mod z_indices;
 
 fn main() {
+    panic::set_hook(Box::new(console_error_panic_hook::hook));
     env::set_var("RUST_BACKTRACE", "full");
 
     App::new()

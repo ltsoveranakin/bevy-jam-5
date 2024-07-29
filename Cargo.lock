@@ -311,6 +311,7 @@ dependencies = [
  "bevy_ecs_tilemap",
  "bevy_rapier2d",
  "bevy_turborand",
+ "console_error_panic_hook",
  "serde",
  "serde_json",
  "thiserror",

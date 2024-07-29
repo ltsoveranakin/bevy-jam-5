@@ -6,7 +6,7 @@ use crate::day_night::DayNightState;
 use crate::levels::{TILE_MAP_SIZE, TILE_SIZE, TileLevelLoadedEvent};
 use crate::levels::data::LocationData;
 use crate::math::tile_pos_to_world_pos_2d;
-use crate::z_indecies::SHADOW_Z_INDEX;
+use crate::z_indices::SHADOW_Z_INDEX;
 
 const SHADOW_ALPHA: f32 = 0.2;
 
@@ -17,7 +17,8 @@ impl Plugin for ShadowPlugin {
         app.init_resource::<ShadowMaterial>()
             .add_systems(Startup, create_shadow_material)
             .add_systems(Update, create_shadows)
-            .add_systems(OnEnter(DayNightState::Night), despawn_shadows_night);
+            .add_systems(OnEnter(DayNightState::Night), hide_shadows_night)
+            .add_systems(OnEnter(DayNightState::Day), show_shadows_day);
     }
 }
 
@@ -99,8 +100,14 @@ fn create_shadows(
     }
 }
 
-fn despawn_shadows_night(mut commands: Commands, shadow_query: Query<Entity, With<Shadow>>) {
-    for entity in shadow_query.iter() {
-        commands.entity(entity).despawn();
+fn hide_shadows_night(mut shadow_query: Query<&mut Visibility, With<Shadow>>) {
+    for mut visibility in shadow_query.iter_mut() {
+        *visibility = Visibility::Hidden;
+    }
+}
+
+fn show_shadows_day(mut shadow_query: Query<&mut Visibility, With<Shadow>>) {
+    for mut visibility in shadow_query.iter_mut() {
+        *visibility = Visibility::Visible;
     }
 }

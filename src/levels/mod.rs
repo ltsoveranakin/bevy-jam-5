@@ -9,7 +9,7 @@ use crate::levels::hazard::HazardPlugin;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
 use crate::player::respawn::RespawnPlayerEvent;
-use crate::z_indecies::TILE_MAP_Z_INDEX;
+use crate::z_indices::TILE_MAP_Z_INDEX;
 
 pub mod data;
 mod hazard;

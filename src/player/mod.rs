@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use crate::player::melting::{MeltingPlugin, MeltStage};
 use crate::player::movement::MovementPlugin;
 use crate::player::respawn::RespawnPlugin;
-use crate::z_indecies::PLAYER_Z_INDEX;
+use crate::z_indices::PLAYER_Z_INDEX;
 
 mod melting;
 mod movement;

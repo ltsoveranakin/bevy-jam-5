@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::player::respawn::RespawnPlayerEvent;
+use crate::player::respawn::KillPlayerEvent;
 
 pub struct HazardPlugin;
 
@@ -13,11 +13,11 @@ impl Plugin for HazardPlugin {
 
 fn player_contact_hazard(
     mut collision_event: EventReader<CollisionEvent>,
-    mut respawn_player: EventWriter<RespawnPlayerEvent>,
+    mut kill_player: EventWriter<KillPlayerEvent>,
 ) {
     let collided = if let Some(collision) = collision_event.read().next() {
         if let CollisionEvent::Started(_, _, _) = collision {
-            respawn_player.send_default();
+            kill_player.send_default();
         }
         true
     } else {

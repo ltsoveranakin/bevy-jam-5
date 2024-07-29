@@ -13,7 +13,7 @@ pub struct RespawnPlugin;
 
 impl Plugin for RespawnPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerDeathEvent>()
+        app.add_event::<KillPlayerEvent>()
             .add_event::<PlayerFinishLevelEvent>()
             .add_event::<RespawnPlayerEvent>()
             .add_systems(
@@ -36,7 +36,7 @@ impl Plugin for RespawnPlugin {
 struct CheckPlayerForRespawn;
 
 #[derive(Event, Default)]
-pub struct PlayerDeathEvent;
+pub struct KillPlayerEvent;
 
 #[derive(Event, Default)]
 pub struct PlayerFinishLevelEvent;
@@ -46,13 +46,13 @@ pub struct RespawnPlayerEvent;
 
 fn check_player_out_of_bounds(
     player_query: Query<&Transform, With<Player>>,
-    mut player_death: EventWriter<PlayerDeathEvent>,
+    mut kill_player: EventWriter<KillPlayerEvent>,
     mut player_finish_level: EventWriter<PlayerFinishLevelEvent>,
 ) {
     let transform = player_query.single();
 
     if transform.translation.y < -20. {
-        player_death.send_default();
+        kill_player.send_default();
     }
 
     if transform.translation.x > 320. {
@@ -62,12 +62,12 @@ fn check_player_out_of_bounds(
 }
 
 fn respawn_player_death(
-    mut player_death_ev: EventReader<PlayerDeathEvent>,
+    mut kill_player_event: EventReader<KillPlayerEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut set_day_night: EventWriter<SetDayNightEvent>,
     mut set_melt_stage: EventWriter<SetMeltStageEvent>,
 ) {
-    if player_death_ev.read().next().is_some() {
+    if kill_player_event.read().next().is_some() {
         println!("death");
         respawn_player.send_default();
         set_day_night.send(SetDayNightEvent(DayNightState::Day));
@@ -132,8 +132,8 @@ fn respawn_player(
     }
 }
 
-fn key_respawn(keys: Res<ButtonInput<KeyCode>>, mut player_death: EventWriter<PlayerDeathEvent>) {
+fn key_respawn(keys: Res<ButtonInput<KeyCode>>, mut kill_player: EventWriter<KillPlayerEvent>) {
     if keys.just_pressed(KeyCode::KeyR) {
-        player_death.send_default();
+        kill_player.send_default();
     }
 }
