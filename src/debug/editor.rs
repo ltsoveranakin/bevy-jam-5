@@ -7,9 +7,9 @@ use bevy::utils::AHasher;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::debug::DebugUpdateSet;
-use crate::levels::{MainMap, OverlayMap};
 use crate::levels::data::{LevelData, LocationData, OverlayData, TileData, TileTypeData};
 use crate::levels::level_loader::LevelDataHandleRes;
+use crate::levels::{CurrentLevel, MainMap, OverlayMap};
 use crate::math::world_pos_to_tile_pos;
 
 pub struct DebugEditorPlugin;
@@ -221,6 +221,7 @@ fn save_current_tile_map(
     overlay_map_query: Query<&TileStorage, With<OverlayMap>>,
     tile_query: Query<(&TilePos, &TileTextureIndex)>,
     level_data_handle: Res<LevelDataHandleRes>,
+    current_level: Res<CurrentLevel>,
     level_data_assets: Res<Assets<LevelData>>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
@@ -263,12 +264,7 @@ fn save_current_tile_map(
 
         let json_str = serde_json::to_string(&level_data).unwrap();
 
-        let mut hasher = AHasher::default();
-
-        level_data.hash(&mut hasher);
-        let hash_value = hasher.finish() as u16;
-
-        let file_out_path = &format!("level-hash-{}.out.json", hash_value);
+        let file_out_path = &format!("assets/level/level{}.lvl.json", current_level.0);
 
         let mut file = File::create(file_out_path).unwrap();
 

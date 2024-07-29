@@ -1,2 +1,3 @@
 /target
+/wasm-out
 *.out.json

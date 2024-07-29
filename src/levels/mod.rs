@@ -70,7 +70,7 @@ pub struct TileLevelLoadedEvent {
 }
 
 fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
-    load_level_event.send(LoadLevelEvent(1));
+    load_level_event.send(LoadLevelEvent(0));
 }
 
 #[allow(clippy::too_many_arguments)]
