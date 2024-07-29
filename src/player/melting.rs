@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-
 use crate::day_night::DayCycleSet;
+
 use crate::player::{CAST_COLLIDER_SCALE, Player, PlayerSprite};
 
 const MELT_INTERVAL: f32 = 3.;

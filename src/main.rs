@@ -11,13 +11,13 @@ use crate::debug::DebugPlugin;
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
 
-
 mod camera;
+mod day_night;
 mod debug;
 mod levels;
 mod math;
 mod player;
-mod day_night;
+mod z_indecies;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "full");
@@ -41,6 +41,12 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.),
             RapierDebugRenderPlugin::default().disabled(),
         ))
-        .add_plugins((PlayerPlugin, LevelPlugin, CameraPlugin, DebugPlugin, DayNightPlugin))
+        .add_plugins((
+            PlayerPlugin,
+            LevelPlugin,
+            CameraPlugin,
+            DebugPlugin,
+            DayNightPlugin,
+        ))
         .run();
 }

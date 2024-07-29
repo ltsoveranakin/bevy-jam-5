@@ -1,12 +1,15 @@
+mod night;
+
 use bevy::prelude::*;
 
 use crate::camera::{DAY_COLOR, NIGHT_COLOR};
+use crate::day_night::night::NightPlugin;
 
 pub struct DayNightPlugin;
 
 impl Plugin for DayNightPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<DayNightState>()
+        app.add_plugins(NightPlugin).init_state::<DayNightState>()
             .add_event::<SetDayNightEvent>()
             .configure_sets(
                 Update,

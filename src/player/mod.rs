@@ -4,6 +4,7 @@ use bevy_rapier2d::prelude::*;
 use crate::player::melting::{MeltingPlugin, MeltStage};
 use crate::player::movement::MovementPlugin;
 use crate::player::respawn::RespawnPlugin;
+use crate::z_indecies::PLAYER_Z_INDEX;
 
 mod melting;
 mod movement;
@@ -66,7 +67,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent.spawn((
                 SpriteBundle {
                     texture: asset_server.load("image/character/snowman.png"),
-                    transform: Transform::from_xyz(0., 4., 2.),
+                    transform: Transform::from_xyz(0., 4., PLAYER_Z_INDEX),
                     sprite: Sprite {
                         rect: Some(Rect::from_center_half_size(
                             MeltStage::None.get_tile_sprite_offset(),

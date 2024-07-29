@@ -13,6 +13,12 @@ pub struct LocationData {
     pub y: u32,
 }
 
+impl LocationData {
+    pub fn new(x: u32, y: u32) -> Self {
+        Self { x, y }
+    }
+}
+
 struct LocationVisitor;
 
 impl<'de> Visitor<'de> for LocationVisitor {
@@ -73,7 +79,7 @@ impl From<LocationData> for UVec2 {
     }
 }
 
-#[derive(Deserialize, Serialize, Hash, Debug)]
+#[derive(Deserialize, Serialize, Hash, Debug, Copy, Clone)]
 pub enum TileTypeData {
     Dirt,
     Stone,

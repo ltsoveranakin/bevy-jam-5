@@ -1,12 +1,14 @@
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::debug::{DebugState, DebugVisibility};
-use crate::levels::data::LevelData;
+use crate::debug::{DebugState, DebugUpdateSet, DebugVisibility};
+use crate::levels::data::{LevelData, LocationData, TileTypeData};
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
 use crate::player::respawn::RespawnPlayerEvent;
+use crate::z_indecies::TILE_MAP_Z_INDEX;
 
 pub mod data;
 pub mod level_loader;
@@ -25,6 +27,7 @@ impl Plugin for LevelPlugin {
         app.add_plugins(LevelLoaderPlugin)
             .add_event::<LoadLevelEvent>()
             .add_event::<LoadNextLevelEvent>()
+            .add_event::<TileLevelLoadedEvent>()
             .init_resource::<CurrentLevel>()
             .add_systems(Startup, setup)
             .add_systems(
@@ -33,6 +36,7 @@ impl Plugin for LevelPlugin {
                     level_data_ready,
                     receive_load_level,
                     receive_load_next_level,
+                    toggle_tilemap_visibility.in_set(DebugUpdateSet),
                 ),
             );
     }
@@ -53,22 +57,32 @@ pub struct LoadNextLevelEvent;
 #[derive(Resource, Default)]
 pub struct CurrentLevel(pub u32);
 
-fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
-    load_level_event.send(LoadLevelEvent(0));
+#[derive(Event)]
+pub struct TileLevelLoadedEvent {
+    pub level_data_map: HashMap<LocationData, TileTypeData>,
 }
 
+fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
+    load_level_event.send(LoadLevelEvent(4));
+}
+
+#[allow(clippy::too_many_arguments)]
 fn level_data_ready(
     mut commands: Commands,
-    tilemap_query: Query<Entity, With<TilemapType>>,
+    tile_map_query: Query<Entity, With<TilemapType>>,
     mut level_data_loaded_event: EventReader<LevelDataLoadedEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
+    mut tile_level_loaded: EventWriter<TileLevelLoadedEvent>,
     debug_state: Res<State<DebugState>>,
     level_data_assets: Res<Assets<LevelData>>,
     asset_server: Res<AssetServer>,
 ) {
     if let Some(level_data) = level_data_loaded_event.read().next() {
         let level_data = level_data_assets.get(level_data.0).unwrap();
-        for tile_map_entity in tilemap_query.iter() {
+
+        let mut level_data_map = HashMap::new();
+
+        for tile_map_entity in tile_map_query.iter() {
             commands.entity(tile_map_entity).despawn_recursive();
         }
 
@@ -83,6 +97,8 @@ fn level_data_ready(
 
         for tile_data in &level_data.tiles {
             let tile_pos = TilePos::new(tile_data.off.x, tile_data.off.y);
+
+            level_data_map.insert(tile_data.off, tile_data.tile_type);
 
             let tile_entity = commands
                 .spawn((
@@ -147,6 +163,8 @@ fn level_data_ready(
             tile_storage.set(&tile_pos, tile_entity);
         }
 
+        tile_level_loaded.send(TileLevelLoadedEvent { level_data_map });
+
         let tile_size = TilemapTileSize::new(TILE_SIZE, TILE_SIZE);
         let grid_size = tile_size.into();
 
@@ -169,7 +187,7 @@ fn level_data_ready(
                 storage: overlay_tile_storage,
                 tile_size,
                 texture: TilemapTexture::Single(tile_set_handle),
-                transform: Transform::from_xyz(0., 0., 1.),
+                transform: Transform::from_xyz(0., 0., TILE_MAP_Z_INDEX),
                 ..default()
             },
             OverlayMap,
@@ -199,6 +217,24 @@ fn receive_load_next_level(
         if current_level.0 < MAX_LEVEL_INDEX {
             load_level_event.send(LoadLevelEvent(current_level.0 + 1));
         } else {
+            println!("WIN!");
+        }
+    }
+}
+
+fn toggle_tilemap_visibility(
+    mut tile_map_query: Query<&mut Visibility, With<TilemapType>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::KeyT) {
+        for mut tile_map_visibility in tile_map_query.iter_mut() {
+            *tile_map_visibility = match *tile_map_visibility {
+                Visibility::Visible => Visibility::Hidden,
+                Visibility::Hidden => Visibility::Visible,
+                Visibility::Inherited => Visibility::Hidden,
+            };
+
+            println!("toggle map visibility: {:?}", tile_map_visibility);
         }
     }
 }
