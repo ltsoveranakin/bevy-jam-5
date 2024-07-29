@@ -3,7 +3,6 @@ use bevy::utils::HashMap;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
-use crate::day_night::shadow::DespawnShadowsEvent;
 use crate::debug::{DebugState, DebugUpdateSet, DebugVisibility};
 use crate::levels::data::{LevelData, LocationData, TileTypeData};
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
@@ -64,7 +63,7 @@ pub struct TileLevelLoadedEvent {
 }
 
 fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
-    load_level_event.send(LoadLevelEvent(0));
+    load_level_event.send(LoadLevelEvent(1));
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -74,7 +73,6 @@ fn level_data_ready(
     mut level_data_loaded_event: EventReader<LevelDataLoadedEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut tile_level_loaded: EventWriter<TileLevelLoadedEvent>,
-    mut despawn_shadows: EventWriter<DespawnShadowsEvent>,
     debug_state: Res<State<DebugState>>,
     level_data_assets: Res<Assets<LevelData>>,
     asset_server: Res<AssetServer>,
@@ -195,7 +193,6 @@ fn level_data_ready(
 
         respawn_player.send_default();
         tile_level_loaded.send(TileLevelLoadedEvent { level_data_map });
-        despawn_shadows.send_default();
     }
 }
 

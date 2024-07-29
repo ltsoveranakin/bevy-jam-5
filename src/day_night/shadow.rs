@@ -8,21 +8,16 @@ use crate::levels::data::LocationData;
 use crate::math::tile_pos_to_world_pos_2d;
 use crate::z_indecies::SHADOW_Z_INDEX;
 
-const SHADOW_ALPHA: f32 = 0.4;
+const SHADOW_ALPHA: f32 = 0.2;
 
 pub struct ShadowPlugin;
 
 impl Plugin for ShadowPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShadowMaterial>()
-            .add_event::<DespawnShadowsEvent>()
             .add_systems(Startup, create_shadow_material)
-            .add_systems(
-                Update,
-                (despawn_shadows, create_shadows.after(despawn_shadows)),
-                // always run after. if create shadows runs before, may cause issue with level loaded event and creation of new shadows
-            )
-            .add_systems(OnEnter(DayNightState::Night), toggle_night_despawn_shadows);
+            .add_systems(Update, create_shadows)
+            .add_systems(OnEnter(DayNightState::Night), despawn_shadows_night);
     }
 }
 
@@ -31,9 +26,6 @@ struct ShadowMaterial(Handle<ColorMaterial>);
 
 #[derive(Component)]
 struct Shadow;
-
-#[derive(Event, Default)]
-pub struct DespawnShadowsEvent;
 
 fn create_shadow_material(
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -48,10 +40,15 @@ fn create_shadow_material(
 fn create_shadows(
     mut commands: Commands,
     mut tile_level_loaded_event: EventReader<TileLevelLoadedEvent>,
+    shadow_query: Query<Entity, With<Shadow>>,
     mut meshes: ResMut<Assets<Mesh>>,
     shadow_material: Res<ShadowMaterial>,
 ) {
     if let Some(tile_level_loaded) = tile_level_loaded_event.read().next() {
+        for entity in shadow_query.iter() {
+            commands.entity(entity).despawn();
+        }
+
         let tile_map = &tile_level_loaded.level_data_map;
 
         for x in 0..TILE_MAP_SIZE {
@@ -102,18 +99,8 @@ fn create_shadows(
     }
 }
 
-fn toggle_night_despawn_shadows(mut despawn_shadows: EventWriter<DespawnShadowsEvent>) {
-    despawn_shadows.send_default();
-}
-
-fn despawn_shadows(
-    mut commands: Commands,
-    shadow_query: Query<Entity, With<Shadow>>,
-    mut despawn_shadows_event: EventReader<DespawnShadowsEvent>,
-) {
-    if despawn_shadows_event.read().next().is_some() {
-        for entity in shadow_query.iter() {
-            commands.entity(entity).despawn();
-        }
+fn despawn_shadows_night(mut commands: Commands, shadow_query: Query<Entity, With<Shadow>>) {
+    for entity in shadow_query.iter() {
+        commands.entity(entity).despawn();
     }
 }
