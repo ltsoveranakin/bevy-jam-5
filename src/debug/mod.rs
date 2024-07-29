@@ -43,6 +43,8 @@ fn toggle_debug_state(
                 next_debug_state.set(DebugState::On);
                 println!("Debug Mode ON");
                 println!("Press 'e' to toggle editor");
+                println!("Press 'o/p' to go to previous/next level");
+                println!("Press 't' to toggle tile map visibility");
             } else {
                 next_debug_state.set(DebugState::Off);
                 println!("Debug Mode OFF");
