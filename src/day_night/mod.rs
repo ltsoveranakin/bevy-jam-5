@@ -1,15 +1,17 @@
 use bevy::prelude::*;
 
 use crate::camera::{DAY_COLOR, NIGHT_COLOR};
+use crate::day_night::music::MusicPlugin;
 use crate::day_night::shadow::ShadowPlugin;
 
+mod music;
 pub mod shadow;
 
 pub struct DayNightPlugin;
 
 impl Plugin for DayNightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(ShadowPlugin)
+        app.add_plugins((ShadowPlugin, MusicPlugin))
             .init_state::<DayNightState>()
             .add_event::<SetDayNightEvent>()
             .configure_sets(
