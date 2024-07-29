@@ -9,6 +9,7 @@ use bevy_ecs_tilemap::prelude::*;
 use crate::debug::DebugUpdateSet;
 use crate::levels::{MainMap, OverlayMap};
 use crate::levels::data::{LevelData, LocationData, OverlayData, TileData, TileTypeData};
+use crate::levels::level_loader::LevelDataHandleRes;
 use crate::math::world_pos_to_tile_pos;
 
 pub struct DebugEditorPlugin;
@@ -219,15 +220,23 @@ fn save_current_tile_map(
     main_map_query: Query<&TileStorage, With<MainMap>>,
     overlay_map_query: Query<&TileStorage, With<OverlayMap>>,
     tile_query: Query<(&TilePos, &TileTextureIndex)>,
+    level_data_handle: Res<LevelDataHandleRes>,
+    level_data_assets: Res<Assets<LevelData>>,
     keys: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
 ) {
     if keys.just_pressed(KeyCode::KeyK) {
         let tile_storage = main_map_query.single();
         let overlay_map_storage = overlay_map_query.single();
 
+        let spawn_location = if let Some(handle) = level_data_handle.0.clone() {
+            let level_data = level_data_assets.get(handle.id()).unwrap();
+            level_data.spawn_location
+        } else {
+            LocationData::new(0, 0)
+        };
+
         let mut level_data = LevelData {
-            spawn_location: LocationData { x: 0, y: 0 },
+            spawn_location,
             tiles: vec![],
         };
 
@@ -259,11 +268,13 @@ fn save_current_tile_map(
         level_data.hash(&mut hasher);
         let hash_value = hasher.finish() as u16;
 
-        let mut file = File::create(format!("level-hash-{}.out.json", hash_value)).unwrap();
+        let file_out_path = &format!("level-hash-{}.out.json", hash_value);
+
+        let mut file = File::create(file_out_path).unwrap();
 
         file.write_all(json_str.as_bytes())
             .expect("Unable to write to file");
 
-        println!("Wrote data to file at level-hash-{}.out.json", hash_value)
+        println!("Wrote data to file at {}", file_out_path);
     }
 }
