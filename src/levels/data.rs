@@ -103,6 +103,13 @@ impl TileTypeData {
             _ => unreachable!(),
         }
     }
+
+    pub fn is_hazard(&self) -> bool {
+        match self {
+            Self::Water => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Hash, Debug)]

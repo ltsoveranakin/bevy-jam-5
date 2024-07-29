@@ -115,7 +115,9 @@ fn respawn_player(
     let mut sprite = player_sprite_query.single_mut();
 
     if respawn_player_ev.read().next().is_some() {
+        println!("attempt respawn");
         if let Some(handle) = level_data_handle.0.clone() {
+            // should always be some... circle back
             let level_data = level_data_assets.get(handle.id()).unwrap();
 
             velocity.linvel = Vec2::ZERO;

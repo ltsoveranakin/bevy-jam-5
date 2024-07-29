@@ -5,12 +5,14 @@ use bevy_rapier2d::prelude::*;
 
 use crate::debug::{DebugState, DebugUpdateSet, DebugVisibility};
 use crate::levels::data::{LevelData, LocationData, TileTypeData};
+use crate::levels::hazard::HazardPlugin;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
 use crate::player::respawn::RespawnPlayerEvent;
 use crate::z_indecies::TILE_MAP_Z_INDEX;
 
 pub mod data;
+mod hazard;
 pub mod level_loader;
 
 pub const TILE_MAP_SIZE: u32 = 32;
@@ -24,7 +26,7 @@ pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(LevelLoaderPlugin)
+        app.add_plugins((LevelLoaderPlugin, HazardPlugin))
             .add_event::<LoadLevelEvent>()
             .add_event::<LoadPreviousLevelEvent>()
             .add_event::<LoadNextLevelEvent>()
@@ -161,6 +163,12 @@ fn level_data_ready(
                     ));
                 })
                 .id();
+
+            if tile_data.tile_type.is_hazard() {
+                commands
+                    .entity(collider_entity)
+                    .insert((Sensor, ActiveEvents::COLLISION_EVENTS));
+            }
 
             commands.entity(tile_entity).add_child(collider_entity);
 
