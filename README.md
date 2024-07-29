@@ -21,3 +21,6 @@ https://github.com/ltsoveranakin
 
 The source for this project can be viewed here:
 https://github.com/ltsoveranakin/bevy-jam-5
+
+The game can be played online here:
+https://ltsoveranakin.itch.io/dont-chill-out
