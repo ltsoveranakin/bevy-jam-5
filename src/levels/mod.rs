@@ -18,7 +18,7 @@ pub const TILE_MAP_SIZE_F32: f32 = TILE_MAP_SIZE as f32;
 pub const TILE_SIZE: f32 = 16.;
 pub const HALF_TILE_SIZE: f32 = 8.;
 
-pub const MAX_LEVEL_INDEX: u32 = 3;
+pub const MAX_LEVEL_INDEX: u32 = 4;
 
 pub struct LevelPlugin;
 
@@ -26,6 +26,7 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LevelLoaderPlugin)
             .add_event::<LoadLevelEvent>()
+            .add_event::<LoadPreviousLevelEvent>()
             .add_event::<LoadNextLevelEvent>()
             .add_event::<TileLevelLoadedEvent>()
             .init_resource::<CurrentLevel>()
@@ -36,7 +37,8 @@ impl Plugin for LevelPlugin {
                     level_data_ready,
                     receive_load_level,
                     receive_load_next_level,
-                    toggle_tilemap_visibility.in_set(DebugUpdateSet),
+                    receive_load_previous_level,
+                    (debug_toggle_tilemap_visibility, debug_next_level).in_set(DebugUpdateSet),
                 ),
             );
     }
@@ -53,6 +55,9 @@ pub struct LoadLevelEvent(u32);
 
 #[derive(Event, Default)]
 pub struct LoadNextLevelEvent;
+
+#[derive(Event, Default)]
+pub struct LoadPreviousLevelEvent;
 
 #[derive(Resource, Default)]
 pub struct CurrentLevel(pub u32);
@@ -220,7 +225,21 @@ fn receive_load_next_level(
     }
 }
 
-fn toggle_tilemap_visibility(
+fn receive_load_previous_level(
+    current_level: Res<CurrentLevel>,
+    mut load_previous_level_event: EventReader<LoadPreviousLevelEvent>,
+    mut load_level_event: EventWriter<LoadLevelEvent>,
+) {
+    if load_previous_level_event.read().next().is_some() {
+        if current_level.0 > 0 {
+            load_level_event.send(LoadLevelEvent(current_level.0 - 1));
+        } else {
+            println!("No further back");
+        }
+    }
+}
+
+fn debug_toggle_tilemap_visibility(
     mut tile_map_query: Query<&mut Visibility, With<TilemapType>>,
     keys: Res<ButtonInput<KeyCode>>,
 ) {
@@ -234,5 +253,19 @@ fn toggle_tilemap_visibility(
 
             println!("toggle map visibility: {:?}", tile_map_visibility);
         }
+    }
+}
+
+fn debug_next_level(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut load_next_level: EventWriter<LoadNextLevelEvent>,
+    mut load_previous_level: EventWriter<LoadPreviousLevelEvent>,
+) {
+    if keys.just_pressed(KeyCode::KeyP) {
+        load_next_level.send_default();
+    }
+
+    if keys.just_pressed(KeyCode::KeyO) {
+        load_previous_level.send_default();
     }
 }
