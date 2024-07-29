@@ -41,6 +41,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(800., 600.),
+                        title: "A Snowman's Cycle".into(),
                         ..default()
                     }),
                     ..default()

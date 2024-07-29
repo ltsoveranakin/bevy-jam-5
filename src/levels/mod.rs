@@ -9,7 +9,7 @@ use crate::levels::hazard::HazardPlugin;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
 use crate::player::respawn::RespawnPlayerEvent;
-use crate::z_indices::TILE_MAP_Z_INDEX;
+use crate::z_indices::{TILE_MAP_OVERLAY_Z_INDEX, TILE_MAP_Z_INDEX};
 
 pub mod data;
 mod hazard;
@@ -186,6 +186,7 @@ fn level_data_ready(
                 storage: tile_storage,
                 tile_size,
                 texture: TilemapTexture::Single(tile_set_handle.clone()),
+                transform: Transform::from_xyz(0., 0., TILE_MAP_Z_INDEX),
                 ..default()
             },
             MainMap,
@@ -198,7 +199,7 @@ fn level_data_ready(
                 storage: overlay_tile_storage,
                 tile_size,
                 texture: TilemapTexture::Single(tile_set_handle),
-                transform: Transform::from_xyz(0., 0., TILE_MAP_Z_INDEX),
+                transform: Transform::from_xyz(0., 0., TILE_MAP_OVERLAY_Z_INDEX),
                 ..default()
             },
             OverlayMap,
