@@ -9,6 +9,8 @@ use crate::levels::hazard::HazardPlugin;
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
 use crate::math::tile_pos_to_world_pos;
 use crate::player::respawn::RespawnPlayerEvent;
+use crate::timer::StartGameEvent;
+use crate::win::WinGameEvent;
 use crate::z_indices::{TILE_MAP_OVERLAY_Z_INDEX, TILE_MAP_Z_INDEX};
 
 pub mod data;
@@ -16,11 +18,10 @@ mod hazard;
 pub mod level_loader;
 
 pub const TILE_MAP_SIZE: u32 = 32;
-pub const TILE_MAP_SIZE_F32: f32 = TILE_MAP_SIZE as f32;
 pub const TILE_SIZE: f32 = 16.;
 pub const HALF_TILE_SIZE: f32 = 8.;
 
-pub const MAX_LEVEL_INDEX: u32 = 4;
+pub const MAX_LEVEL_INDEX: u32 = 5;
 
 pub struct LevelPlugin;
 
@@ -53,7 +54,7 @@ pub struct MainMap;
 pub struct OverlayMap;
 
 #[derive(Event)]
-pub struct LoadLevelEvent(u32);
+pub struct LoadLevelEvent(pub u32);
 
 #[derive(Event, Default)]
 pub struct LoadNextLevelEvent;
@@ -69,8 +70,9 @@ pub struct TileLevelLoadedEvent {
     pub level_data_map: HashMap<LocationData, TileTypeData>,
 }
 
-fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
-    load_level_event.send(LoadLevelEvent(0));
+fn setup(mut load_level: EventWriter<LoadLevelEvent>, mut start_game: EventWriter<StartGameEvent>) {
+    load_level.send(LoadLevelEvent(0));
+    start_game.send_default();
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -224,11 +226,13 @@ fn receive_load_next_level(
     current_level: Res<CurrentLevel>,
     mut load_next_level_event: EventReader<LoadNextLevelEvent>,
     mut load_level_event: EventWriter<LoadLevelEvent>,
+    mut win_game_event: EventWriter<WinGameEvent>,
 ) {
     if load_next_level_event.read().next().is_some() {
         if current_level.0 < MAX_LEVEL_INDEX {
             load_level_event.send(LoadLevelEvent(current_level.0 + 1));
         } else {
+            win_game_event.send_default();
             println!("WIN!");
         }
     }

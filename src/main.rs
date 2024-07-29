@@ -14,6 +14,7 @@ use crate::debug::DebugPlugin;
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
 use crate::timer::TimerPlugin;
+use crate::win::WinGamePlugin;
 
 mod camera;
 mod day_night;
@@ -22,6 +23,7 @@ mod levels;
 mod math;
 mod player;
 mod timer;
+mod win;
 mod z_indices;
 
 fn main() {
@@ -41,7 +43,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(800., 600.),
-                        title: "A Snowman's Cycle".into(),
+                        title: "Don't Chill Out".into(),
                         ..default()
                     }),
                     ..default()
@@ -57,6 +59,7 @@ fn main() {
             DebugPlugin,
             DayNightPlugin,
             TimerPlugin,
+            WinGamePlugin,
         ))
         .run();
 }

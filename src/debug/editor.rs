@@ -1,15 +1,14 @@
 use std::fs::File;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io::Write;
 
 use bevy::prelude::*;
-use bevy::utils::AHasher;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::debug::DebugUpdateSet;
+use crate::levels::{CurrentLevel, MainMap, OverlayMap};
 use crate::levels::data::{LevelData, LocationData, OverlayData, TileData, TileTypeData};
 use crate::levels::level_loader::LevelDataHandleRes;
-use crate::levels::{CurrentLevel, MainMap, OverlayMap};
 use crate::math::world_pos_to_tile_pos;
 
 pub struct DebugEditorPlugin;
@@ -71,7 +70,6 @@ fn toggle_editor_mode(
             println!("Press 'k' to save to file in current directory");
             println!("Left click to set tile");
             println!("Right click to delete tile in current scope (overlay vs. regular tile)");
-            println!("File needs to be manually copied to assets/level");
         } else {
             next_editor_state.set(EditorState::Off);
             println!("Editor OFF");

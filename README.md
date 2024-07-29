@@ -1,4 +1,4 @@
-# A Snowman's Cycle
+# Dont-Chill-Out
 
 This is a platformer game in which you are a snowman who must pass each level during both the day and night.
 But be quick! Taking too long during the day can make the nighttime more difficult.
