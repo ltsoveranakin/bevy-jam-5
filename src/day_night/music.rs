@@ -3,23 +3,17 @@ use bevy::prelude::*;
 
 use crate::day_night::DayNightState;
 
-const FADE_TIME: f32 = 2.;
+const FADE_TIME: f32 = 4.;
 
 pub struct MusicPlugin;
 
 impl Plugin for MusicPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<MusicHandles>()
-            .add_systems(Startup, setup_music)
+        app.add_systems(Startup, setup_music)
             .add_systems(Update, fade_audio)
             .add_systems(OnEnter(DayNightState::Night), night_music)
             .add_systems(OnEnter(DayNightState::Day), day_music);
     }
-}
-
-#[derive(Resource, Default)]
-struct MusicHandles {
-    night: Handle<AudioSource>,
 }
 
 #[derive(Component)]
@@ -43,40 +37,71 @@ impl FadeAudioDirection {
     }
 }
 
-fn setup_music(mut music_handles: ResMut<MusicHandles>, asset_server: Res<AssetServer>) {
-    music_handles.night = asset_server.load("audio/music/night.mp3");
+fn setup_music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let day_handle = asset_server.load::<AudioSource>("audio/music/day.mp3");
+    let night_handle = asset_server.load::<AudioSource>("audio/music/night.mp3");
+
+    commands.spawn((
+        AudioBundle {
+            source: day_handle,
+            settings: PlaybackSettings {
+                volume: Volume::ZERO,
+                mode: PlaybackMode::Loop,
+                paused: true,
+                ..default()
+            },
+        },
+        DayAudio,
+        FadeAudioDirection::Increasing,
+    ));
+
+    commands.spawn((
+        AudioBundle {
+            source: night_handle,
+            settings: PlaybackSettings {
+                volume: Volume::ZERO,
+                mode: PlaybackMode::Loop,
+                paused: true,
+                ..default()
+            },
+        },
+        NightAudio,
+    ));
 }
 
 fn night_music(
     mut commands: Commands,
     day_audio_query: Query<Entity, With<DayAudio>>,
-    music_handles: Res<MusicHandles>,
+    night_audio_query: Query<Entity, With<NightAudio>>,
 ) {
-    for entity in day_audio_query.iter() {
+    if let Ok(night_audio_entity) = night_audio_query.get_single() {
         commands
-            .entity(entity)
+            .entity(night_audio_entity)
+            .insert(FadeAudioDirection::Increasing);
+    }
+
+    if let Ok(day_audio_entity) = day_audio_query.get_single() {
+        commands
+            .entity(day_audio_entity)
+            .insert(FadeAudioDirection::Decreasing);
+    }
+}
+
+fn day_music(
+    mut commands: Commands,
+    night_audio_query: Query<Entity, With<NightAudio>>,
+    day_audio_query: Query<Entity, With<DayAudio>>,
+) {
+    if let Ok(night_audio_entity) = night_audio_query.get_single() {
+        commands
+            .entity(night_audio_entity)
             .insert(FadeAudioDirection::Decreasing);
     }
 
-    commands.spawn((
-        AudioBundle {
-            source: music_handles.night.clone(),
-            settings: PlaybackSettings {
-                volume: Volume::ZERO,
-                mode: PlaybackMode::Loop,
-                ..default()
-            },
-        },
-        NightAudio,
-        FadeAudioDirection::Increasing,
-    ));
-}
-
-fn day_music(mut commands: Commands, night_audio_query: Query<Entity, With<NightAudio>>) {
-    for entity in night_audio_query.iter() {
+    if let Ok(day_audio_entity) = day_audio_query.get_single() {
         commands
-            .entity(entity)
-            .insert(FadeAudioDirection::Decreasing);
+            .entity(day_audio_entity)
+            .insert(FadeAudioDirection::Increasing);
     }
 }
 
@@ -94,13 +119,17 @@ fn fade_audio(
 
         match fade_audio_direction {
             FadeAudioDirection::Increasing => {
+                // println!("inc {}");
+                audio_sink.play();
                 if volume >= 1. {
                     commands.entity(entity).remove::<FadeAudioDirection>();
                 }
             }
             FadeAudioDirection::Decreasing => {
+                // println!("dec {}");
                 if volume <= 0. {
-                    commands.entity(entity).despawn();
+                    audio_sink.pause();
+                    commands.entity(entity).remove::<FadeAudioDirection>();
                 }
             }
         }
