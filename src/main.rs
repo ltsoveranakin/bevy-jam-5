@@ -11,6 +11,7 @@ use bevy_rapier2d::prelude::*;
 use crate::camera::CameraPlugin;
 use crate::day_night::DayNightPlugin;
 use crate::debug::DebugPlugin;
+use crate::instruction_screen::InstructionScreenPlugin;
 use crate::levels::LevelPlugin;
 use crate::player::PlayerPlugin;
 use crate::timer::TimerPlugin;
@@ -19,6 +20,7 @@ use crate::win::WinGamePlugin;
 mod camera;
 mod day_night;
 mod debug;
+mod instruction_screen;
 mod levels;
 mod math;
 mod player;
@@ -60,6 +62,7 @@ fn main() {
             DayNightPlugin,
             TimerPlugin,
             WinGamePlugin,
+            InstructionScreenPlugin,
         ))
         .run();
 }
