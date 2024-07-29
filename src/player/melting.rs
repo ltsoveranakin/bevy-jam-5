@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use crate::day_night::DayCycleSet;
 
+use crate::day_night::DayCycleSet;
 use crate::player::{CAST_COLLIDER_SCALE, Player, PlayerSprite};
+use crate::z_indices::PLAYER_Z_INDEX;
 
 const MELT_INTERVAL: f32 = 3.;
 
@@ -62,6 +63,15 @@ impl MeltStage {
         }
     }
 
+    pub fn get_sprite_offset(&self) -> Vec2 {
+        match self {
+            MeltStage::None => Vec2::new(0., 4.5),
+            MeltStage::Partial => Vec2::new(0., 6.),
+            MeltStage::Half => Vec2::new(0., 7.5),
+            MeltStage::Mostly => Vec2::new(0., 8.5),
+        }
+    }
+
     pub fn get_collider_dimensions(&self) -> Vec2 {
         match self {
             MeltStage::None => Vec2::new(4.5, 6.),
@@ -83,11 +93,11 @@ impl MeltStage {
 fn update_set_melt_stage(
     mut commands: Commands,
     mut player_query: Query<(Entity, &mut Player)>,
-    mut player_sprite_query: Query<&mut Sprite, With<PlayerSprite>>,
+    mut player_sprite_query: Query<(&mut Sprite, &mut Transform), With<PlayerSprite>>,
     mut set_melt_stage_event: EventReader<SetMeltStageEvent>,
 ) {
     let (entity, mut player) = player_query.single_mut();
-    let mut sprite = player_sprite_query.single_mut();
+    let (mut sprite, mut sprite_transform) = player_sprite_query.single_mut();
 
     if let Some(set_melt_stage) = set_melt_stage_event.read().next() {
         let collider_dimensions = set_melt_stage.0.get_collider_dimensions();
@@ -98,6 +108,8 @@ fn update_set_melt_stage(
             set_melt_stage.0.get_tile_sprite_offset(),
             Vec2::splat(16.),
         ));
+
+        sprite_transform.translation = set_melt_stage.0.get_sprite_offset().extend(PLAYER_Z_INDEX);
 
         commands
             .entity(entity)

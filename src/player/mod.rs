@@ -67,10 +67,12 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent.spawn((
                 SpriteBundle {
                     texture: asset_server.load("image/character/snowman.png"),
-                    transform: Transform::from_xyz(0., 4., PLAYER_Z_INDEX),
+                    transform: Transform::from_translation(
+                        melt_stage.get_sprite_offset().extend(PLAYER_Z_INDEX),
+                    ),
                     sprite: Sprite {
                         rect: Some(Rect::from_center_half_size(
-                            MeltStage::None.get_tile_sprite_offset(),
+                            melt_stage.get_tile_sprite_offset(),
                             Vec2::splat(16.),
                         )),
                         ..default()
