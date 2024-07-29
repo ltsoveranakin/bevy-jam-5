@@ -3,6 +3,7 @@ use bevy::utils::HashMap;
 use bevy_ecs_tilemap::prelude::*;
 use bevy_rapier2d::prelude::*;
 
+use crate::day_night::shadow::DespawnShadowsEvent;
 use crate::debug::{DebugState, DebugUpdateSet, DebugVisibility};
 use crate::levels::data::{LevelData, LocationData, TileTypeData};
 use crate::levels::level_loader::{LevelDataLoadedEvent, LevelLoaderPlugin};
@@ -63,7 +64,7 @@ pub struct TileLevelLoadedEvent {
 }
 
 fn setup(mut load_level_event: EventWriter<LoadLevelEvent>) {
-    load_level_event.send(LoadLevelEvent(4));
+    load_level_event.send(LoadLevelEvent(0));
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -73,6 +74,7 @@ fn level_data_ready(
     mut level_data_loaded_event: EventReader<LevelDataLoadedEvent>,
     mut respawn_player: EventWriter<RespawnPlayerEvent>,
     mut tile_level_loaded: EventWriter<TileLevelLoadedEvent>,
+    mut despawn_shadows: EventWriter<DespawnShadowsEvent>,
     debug_state: Res<State<DebugState>>,
     level_data_assets: Res<Assets<LevelData>>,
     asset_server: Res<AssetServer>,
@@ -163,8 +165,6 @@ fn level_data_ready(
             tile_storage.set(&tile_pos, tile_entity);
         }
 
-        tile_level_loaded.send(TileLevelLoadedEvent { level_data_map });
-
         let tile_size = TilemapTileSize::new(TILE_SIZE, TILE_SIZE);
         let grid_size = tile_size.into();
 
@@ -194,7 +194,8 @@ fn level_data_ready(
         ));
 
         respawn_player.send_default();
-        // player_transform.translation = tile_pos_to_world_pos(level_data.spawn_location.into(), 0.);
+        tile_level_loaded.send(TileLevelLoadedEvent { level_data_map });
+        despawn_shadows.send_default();
     }
 }
 

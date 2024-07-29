@@ -2,25 +2,38 @@ use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 
 use crate::camera::NIGHT_COLOR;
+use crate::day_night::DayNightState;
+use crate::levels::{TILE_MAP_SIZE, TILE_SIZE, TileLevelLoadedEvent};
 use crate::levels::data::LocationData;
-use crate::levels::{TileLevelLoadedEvent, TILE_MAP_SIZE, TILE_SIZE};
 use crate::math::tile_pos_to_world_pos_2d;
 use crate::z_indecies::SHADOW_Z_INDEX;
 
 const SHADOW_ALPHA: f32 = 0.4;
 
-pub struct NightPlugin;
+pub struct ShadowPlugin;
 
-impl Plugin for NightPlugin {
+impl Plugin for ShadowPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ShadowMaterial>()
+            .add_event::<DespawnShadowsEvent>()
             .add_systems(Startup, create_shadow_material)
-            .add_systems(Update, create_shadows);
+            .add_systems(
+                Update,
+                (despawn_shadows, create_shadows.after(despawn_shadows)),
+                // always run after. if create shadows runs before, may cause issue with level loaded event and creation of new shadows
+            )
+            .add_systems(OnEnter(DayNightState::Night), toggle_night_despawn_shadows);
     }
 }
 
 #[derive(Resource, Default)]
 struct ShadowMaterial(Handle<ColorMaterial>);
+
+#[derive(Component)]
+struct Shadow;
+
+#[derive(Event, Default)]
+pub struct DespawnShadowsEvent;
 
 fn create_shadow_material(
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -71,19 +84,36 @@ fn create_shadows(
                 let world_start_pos = tile_pos_to_world_pos_2d(start_pos);
                 let world_end_pos = tile_pos_to_world_pos_2d(end_pos);
 
-                println!("start: {}, end: {}", start_pos, end_pos);
-
                 let midpoint = ((world_start_pos + world_end_pos) / 2.).extend(SHADOW_Z_INDEX);
 
                 let shadow_half_size = Vec2::new(TILE_SIZE, shadow_len as f32 * TILE_SIZE);
 
-                commands.spawn(MaterialMesh2dBundle {
-                    mesh: meshes.add(Rectangle::from_size(shadow_half_size)).into(),
-                    material: shadow_material.0.clone(),
-                    transform: Transform::from_translation(midpoint),
-                    ..default()
-                });
+                commands.spawn((
+                    MaterialMesh2dBundle {
+                        mesh: meshes.add(Rectangle::from_size(shadow_half_size)).into(),
+                        material: shadow_material.0.clone(),
+                        transform: Transform::from_translation(midpoint),
+                        ..default()
+                    },
+                    Shadow,
+                ));
             }
+        }
+    }
+}
+
+fn toggle_night_despawn_shadows(mut despawn_shadows: EventWriter<DespawnShadowsEvent>) {
+    despawn_shadows.send_default();
+}
+
+fn despawn_shadows(
+    mut commands: Commands,
+    shadow_query: Query<Entity, With<Shadow>>,
+    mut despawn_shadows_event: EventReader<DespawnShadowsEvent>,
+) {
+    if despawn_shadows_event.read().next().is_some() {
+        for entity in shadow_query.iter() {
+            commands.entity(entity).despawn();
         }
     }
 }
