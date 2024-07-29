@@ -18,3 +18,6 @@ https://github.com/devfilmer
 
 All remaining assets/code (unless otherwise noted) were created by:
 https://github.com/ltsoveranakin
+
+The source for this project can be viewed here:
+https://github.com/ltsoveranakin/bevy-jam-5

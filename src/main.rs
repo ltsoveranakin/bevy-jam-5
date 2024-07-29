@@ -3,6 +3,7 @@ extern crate console_error_panic_hook;
 
 use std::env;
 
+use bevy::asset::AssetMetaCheck;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy_ecs_tilemap::TilemapPlugin;
@@ -48,6 +49,10 @@ fn main() {
                         title: "Don't Chill Out".into(),
                         ..default()
                     }),
+                    ..default()
+                })
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
                     ..default()
                 }),
             TilemapPlugin,
